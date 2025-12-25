@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookOpen, Sigma } from 'lucide-react';
 
 // Mock Data
 const subjects = [
-  { id: 'science', name: 'Science' },
-  { id: 'math', name: 'Mathematics' },
+  { id: 'science', name: 'Science', icon: <BookOpen /> },
+  { id: 'math', name: 'Mathematics', icon: <Sigma /> },
 ];
 
 const concepts = {
@@ -19,13 +19,11 @@ const concepts = {
     { id: 'sci2', name: 'Respiration', status: 'Not Started' },
     { id: 'sci3', name: 'Light Reflection', status: 'In Progress' },
     { id: 'sci4', name: 'Acids & Bases', status: 'Feedback Available' },
-    { id: 'sci5', name: 'Newton\'s Laws', status: 'Not Started' },
   ],
   math: [
     { id: 'math1', name: 'Pythagorean Theorem', status: 'In Progress' },
     { id: 'math2', name: 'Quadratic Equations', status: 'Not Started' },
     { id: 'math3', name: 'Linear Functions', status: 'Feedback Available' },
-    { id: 'math4', name: 'Circles', status: 'Not Started' },
   ],
 };
 
@@ -34,12 +32,12 @@ type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 const getStatusStyles = (status: ConceptStatus) => {
   switch (status) {
     case 'Feedback Available':
-      return 'bg-green-100 text-green-800 border-green-200';
+      return 'bg-success/10 text-success border-success/20';
     case 'In Progress':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      return 'bg-warning/10 text-warning-foreground border-warning/20';
     case 'Not Started':
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-muted text-muted-foreground border-border';
   }
 };
 
@@ -60,12 +58,14 @@ export default function StudentDashboard() {
     <div className="container mx-auto py-8">
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-primary">Select what you are working on today</h1>
+        <p className="text-muted-foreground mt-2">Choose a subject and a concept to get started.</p>
       </header>
 
       <Tabs defaultValue="science" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:w-1/2">
           {subjects.map(subject => (
-            <TabsTrigger key={subject.id} value={subject.id}>
+            <TabsTrigger key={subject.id} value={subject.id} className="gap-2">
+              {subject.icon}
               {subject.name}
             </TabsTrigger>
           ))}
@@ -99,15 +99,15 @@ function ConceptCard({ concept }: { concept: { id: string, name: string, status:
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col transition-all hover:shadow-lg">
       <CardHeader>
         <CardTitle>{concept.name}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
-        <Badge className={getStatusStyles(concept.status)}>{concept.status}</Badge>
+        <Badge variant="outline" className={getStatusStyles(concept.status)}>{concept.status}</Badge>
       </CardContent>
       <CardFooter>
-        <Button asChild className="w-full bg-accent hover:bg-accent/90">
+        <Button asChild className="w-full">
           <Link href={getHref()}>{getButtonAction(concept.status)}</Link>
         </Button>
       </CardFooter>
