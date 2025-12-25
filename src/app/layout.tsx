@@ -2,7 +2,6 @@ import type {Metadata} from 'next';
 import { PT_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { AppStateProvider } from '@/hooks/use-app-state';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -23,9 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-background" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-sans antialiased h-full`}>
-        <AppStateProvider>
           {children}
-        </AppStateProvider>
         <Toaster />
       </body>
     </html>

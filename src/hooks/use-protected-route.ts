@@ -1,19 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppState, type Role } from './use-app-state';
+import type { Role } from '@/types';
 
 export function useProtectedRoute(requiredRole: Role) {
-  const { role } = useAppState();
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    const role = localStorage.getItem('role');
+    
     if (role !== requiredRole) {
-      // This is a client-side safeguard.
-      // The primary protection is in the middleware.
-      const redirectPath = role === 'student' ? '/student/dashboard' : '/teacher/dashboard';
-      router.replace(redirectPath);
+      router.replace('/login');
+    } else {
+      setIsAuthorized(true);
     }
-  }, [role, requiredRole, router]);
+  }, [requiredRole, router]);
+
+  return isAuthorized;
 }

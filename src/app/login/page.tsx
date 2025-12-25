@@ -9,21 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAppState } from '@/hooks/use-app-state';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setRole } = useAppState();
 
   const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setRole('student');
+    localStorage.setItem('role', 'student');
     router.push('/student/dashboard');
   };
 
   const handleTeacherSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setRole('teacher');
+    localStorage.setItem('role', 'teacher');
     router.push('/teacher/dashboard');
   };
 
