@@ -13,7 +13,6 @@ export type User = {
 export type Subject = {
   id: string;
   name: string;
-  icon: LucideIcon;
 };
 
 export type Concept = {
@@ -28,40 +27,21 @@ export type ConceptQuestion = {
   questionText: string;
 };
 
-export type StudentResponse = {
-  id: string;
-  studentId: string;
-  conceptId: string;
-  answers: { questionId: string; answerText: string }[];
-  feedback?: Feedback;
-  submittedAt: Date;
+export type Attempt = {
+    id: string;
+    studentId: string;
+    conceptId: string;
+    answers: { questionId: string; answerText: string }[];
+    evaluationId?: string;
+    status: 'Not Started' | 'In Progress' | 'Feedback Available';
 };
 
-export type Feedback = {
-  correctPoints: string;
-  incorrectPoints: string;
-  correctlyFramedExplanation: string;
-};
-
-export type ConceptUnderstanding = 'Strong' | 'Partial' | 'Weak';
-
-export type TeacherConceptStats = {
-  conceptId: string;
-  understanding: {
-    strong: number; // percentage
-    partial: number;
-    weak: number;
-  };
-  commonMisconceptions: string[];
-};
-
-export type AdminConceptDifficulty = {
-  className: string;
-  conceptName: string;
-  difficulty: number; // 0-100
-};
-
-export type AdminTrend = {
-  date: string; // e.g., 'Jan', 'Feb'
-  "Average Understanding": number; // 0-100
+export type Evaluation = {
+    id: string;
+    attemptId: string;
+    understandingLevel: 'Strong' | 'Partial' | 'Weak';
+    strengths: string[];
+    gaps: string[];
+    correctExplanation: string;
+    evaluatedAt: Date;
 };

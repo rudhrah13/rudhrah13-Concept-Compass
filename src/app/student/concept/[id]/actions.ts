@@ -2,17 +2,29 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { getAuthenticatedUser } from '@/lib/auth/actions';
-import { generateFeedback } from '@/ai/flows/generate-feedback';
-import { concepts, questions as allQuestions, studentResponses } from '@/lib/mock-data';
-import type { StudentResponse, ConceptQuestion } from '@/types';
+import { attempts, concepts, questions as allQuestions, evaluations } from '@/lib/mock-data';
+import type { Attempt, Evaluation } from '@/types';
+
+// This is the mock implementation for POST /evaluateConcept
+async function evaluateConcept(
+  _concept: any, 
+  _combinedAnswers: string
+): Promise<Omit<Evaluation, 'id' | 'attemptId' | 'evaluatedAt'>> {
+  // In a real implementation, this would call the AI backend.
+  // For now, we return mock data.
+  await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+  
+  return {
+    understandingLevel: "Partial",
+    strengths: ["You correctly identified the basic idea."],
+    gaps: ["Your application of the concept was unclear and could use more detail.", "You missed mentioning a key component."],
+    correctExplanation: "A clear, simple explanation of the concept written in easy language would go here, explaining all the core ideas correctly."
+  };
+}
 
 export async function submitResponse(formData: FormData) {
-  const user = await getAuthenticatedUser();
-  if (!user || user.role !== 'student') {
-    throw new Error('Authentication required');
-  }
-
+  // In a real app, user would be from session.
+  const studentId = 'S101'; 
   const conceptId = formData.get('conceptId') as string;
   const concept = concepts.find(c => c.id === conceptId);
   const conceptQuestions = allQuestions.filter(q => q.conceptId === conceptId);
@@ -21,8 +33,13 @@ export async function submitResponse(formData: FormData) {
     throw new Error('Concept not found');
   }
 
+  // --- Find and update the attempt ---
+  let attempt = attempts.find(a => a.studentId === studentId && a.conceptId === conceptId);
+  if (!attempt) {
+    throw new Error('Attempt not found');
+  }
+  
   const answers: { questionId: string, answerText: string }[] = [];
-  let combinedQuestions = '';
   let combinedAnswers = '';
   
   conceptQuestions.forEach((question, index) => {
@@ -30,8 +47,7 @@ export async function submitResponse(formData: FormData) {
     const answerText = formData.get(`answer_${index}`) as string;
     if (questionId && answerText) {
       answers.push({ questionId, answerText });
-      combinedQuestions += `Question: ${question.questionText}\n`;
-      combinedAnswers += `Answer: ${answerText}\n`;
+      combinedAnswers += `Answer to "${question.questionText}": ${answerText}\n`;
     }
   });
 
@@ -39,27 +55,29 @@ export async function submitResponse(formData: FormData) {
     throw new Error('No answers submitted');
   }
 
-  // For prototype simplicity, we combine questions and answers for one AI call.
-  const feedback = await generateFeedback({
-    concept: concept.name,
-    question: combinedQuestions.trim(),
-    studentAnswer: combinedAnswers.trim(),
-  });
+  // Update attempt with answers and set status to In Progress
+  attempt.answers = answers;
+  attempt.status = 'In Progress';
+  revalidatePath('/student/dashboard');
 
-  const newResponse: StudentResponse = {
-    id: `resp${Date.now()}`,
-    studentId: user.id,
-    conceptId,
-    answers,
-    feedback,
-    submittedAt: new Date(),
+  // --- Call the (mocked) evaluation service ---
+  const mockEvaluationResult = await evaluateConcept(concept, combinedAnswers);
+  
+  // --- Create the new evaluation record ---
+  const newEvaluation: Evaluation = {
+    id: `eval${Date.now()}`,
+    attemptId: attempt.id,
+    ...mockEvaluationResult,
+    evaluatedAt: new Date(),
   };
+  evaluations.push(newEvaluation);
 
-  // Mock saving the response
-  studentResponses.push(newResponse);
+  // --- Link evaluation to attempt and update status ---
+  attempt.evaluationId = newEvaluation.id;
+  attempt.status = 'Feedback Available';
 
-  revalidatePath('/teacher/dashboard');
-  revalidatePath(`/teacher/concept/${conceptId}`);
+  revalidatePath('/student/dashboard');
+  revalidatePath(`/student/concept/${conceptId}`);
 
-  redirect(`/student/feedback/${newResponse.id}`);
+  redirect(`/student/feedback/${newEvaluation.id}`);
 }

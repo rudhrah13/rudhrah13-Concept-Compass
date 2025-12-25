@@ -25,8 +25,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(userDashboard, request.url));
     }
     // If logged in but on the wrong path, redirect to their dashboard
-    if (!pathname.startsWith(`/${user.role}`)) {
-      return NextResponse.redirect(new URL(userDashboard, request.url));
+    if (!pathname.startsWith(`/${user.role}`) && !pathname.startsWith('/student/feedback')) {
+        return NextResponse.redirect(new URL(userDashboard, request.url));
     }
   }
 

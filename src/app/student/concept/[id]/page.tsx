@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { submitResponse } from './actions';
-import { Lightbulb } from 'lucide-react';
 
 export default function ConceptPage({ params }: { params: { id: string } }) {
   const concept = concepts.find(c => c.id === params.id);
@@ -18,19 +17,15 @@ export default function ConceptPage({ params }: { params: { id: string } }) {
   return (
     <div className="container py-12">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <p className="text-primary font-semibold">{concept.name}</p>
-          <h1 className="text-4xl font-bold tracking-tight font-headline">Test Your Knowledge</h1>
-          <p className="text-md text-muted-foreground mt-2">Check concept understanding — not an exam.</p>
-          <p className="text-lg text-muted-foreground mt-2">Answer the following questions in your own words.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-headline">Explain the idea in your own words.</h1>
+          <p className="text-md text-muted-foreground mt-1">This is not an exam.</p>
         </div>
 
         <Card className="shadow-lg animate-in fade-in duration-500">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="w-6 h-6 text-yellow-400"/>
-                Your Explanation
-            </CardTitle>
+            <CardTitle>Guided Questions</CardTitle>
             <CardDescription>Think carefully and provide detailed answers.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -40,7 +35,7 @@ export default function ConceptPage({ params }: { params: { id: string } }) {
                 <div key={question.id} className="space-y-2">
                   <input type="hidden" name={`questionId_${index}`} value={question.id} />
                   <Label htmlFor={`answer_${index}`} className="text-base font-medium">
-                    {`Question ${index + 1}: ${question.questionText}`}
+                    {question.questionText}
                   </Label>
                   <Textarea
                     id={`answer_${index}`}
@@ -52,7 +47,7 @@ export default function ConceptPage({ params }: { params: { id: string } }) {
                   />
                 </div>
               ))}
-              <Button type="submit" className="w-full">Submit for Feedback</Button>
+              <Button type="submit" className="w-full">Submit</Button>
             </form>
           </CardContent>
         </Card>

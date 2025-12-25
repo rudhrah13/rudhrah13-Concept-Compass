@@ -1,64 +1,84 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { studentResponses } from '@/lib/mock-data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { evaluations, attempts, concepts } from '@/lib/mock-data';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, XCircle, Lightbulb, ArrowLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 
 export default function FeedbackPage({ params }: { params: { id: string } }) {
-  const response = studentResponses.find(r => r.id === params.id);
+  const evaluation = evaluations.find(r => r.id === params.id);
+  const attempt = attempts.find(a => a.id === evaluation?.attemptId);
+  const concept = concepts.find(c => c.id === attempt?.conceptId);
 
-  if (!response?.feedback) {
+  if (!evaluation || !attempt || !concept) {
     notFound();
   }
 
-  const { correctPoints, incorrectPoints, correctlyFramedExplanation } = response.feedback;
+  const { understandingLevel, strengths, gaps, correctExplanation } = evaluation;
+
+  const getBadgeClass = () => {
+    switch(understandingLevel) {
+        case 'Strong': return 'bg-green-500';
+        case 'Partial': return 'bg-yellow-500';
+        case 'Weak': return 'bg-red-500';
+    }
+  }
 
   return (
     <div className="container py-12">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight font-headline">Your Feedback</h1>
-          <p className="text-lg text-muted-foreground mt-2">Here's a breakdown of your understanding.</p>
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-primary">{concept.name}</p>
+          <div className="flex items-center gap-4 mt-1">
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Your Feedback</h1>
+            <Badge className={getBadgeClass()}>
+                {understandingLevel} Understanding
+            </Badge>
+          </div>
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-accent/20 border-accent shadow-md animate-in fade-in-0 zoom-in-95 duration-500">
+          <Card className="bg-green-500/10 border-green-500/30 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-700">
                 <CheckCircle2 />
-                What You Got Right
+                What you did well
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-base text-green-800">{correctPoints}</p>
+                <ul className="list-disc pl-5 space-y-2 text-green-800">
+                    {strengths.map((point, i) => <li key={i}>{point}</li>)}
+                </ul>
             </CardContent>
           </Card>
 
-          <Card className="bg-destructive/10 border-destructive/50 shadow-md animate-in fade-in-0 zoom-in-95 duration-500 delay-150">
+          <Card className="bg-red-500/10 border-red-500/30 shadow-md">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
+              <CardTitle className="flex items-center gap-2 text-red-700">
                 <XCircle />
-                Points to Clarify
+                What needs improvement
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-base text-destructive/90">{incorrectPoints}</p>
+                <ul className="list-disc pl-5 space-y-2 text-red-800">
+                    {gaps.map((point, i) => <li key={i}>{point}</li>)}
+                </ul>
             </CardContent>
           </Card>
 
           <Separator />
 
-          <Card className="bg-secondary/50 shadow-md animate-in fade-in-0 zoom-in-95 duration-500 delay-300">
+          <Card className="bg-secondary/50 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb />
-                Correct Explanation
+                Correctly framed explanation
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-base leading-relaxed">{correctlyFramedExplanation}</p>
+              <p className="text-base leading-relaxed">{correctExplanation}</p>
             </CardContent>
           </Card>
         </div>
@@ -67,7 +87,7 @@ export default function FeedbackPage({ params }: { params: { id: string } }) {
             <Button asChild variant="outline">
                 <Link href="/student/dashboard">
                     <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Assess Another Concept
+                    Back to Dashboard
                 </Link>
             </Button>
         </div>

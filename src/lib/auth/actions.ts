@@ -14,8 +14,6 @@ export async function login(formData: FormData) {
   const user = users.find((u) => u.role === role && u.id === id);
 
   if (!user) {
-    // In a real app, you'd show an error.
-    // For this prototype, we'll just redirect back to login.
     return redirect('/');
   }
 
@@ -28,7 +26,6 @@ export async function login(formData: FormData) {
     path: '/',
   });
   
-  // After setting the cookie, redirect to the appropriate dashboard
   redirect(`/${user.role}/dashboard`);
 }
 
