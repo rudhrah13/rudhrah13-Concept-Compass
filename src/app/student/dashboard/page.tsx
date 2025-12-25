@@ -1,85 +1,116 @@
-'use client'
+'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { subjects, concepts, getStudentAttempts } from '@/lib/mock-data';
-import type { Concept, Subject, Attempt } from '@/types';
-import { getAuthenticatedUser } from '@/lib/auth/actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Mock Data
+const subjects = [
+  { id: 'science', name: 'Science' },
+  { id: 'math', name: 'Mathematics' },
+];
+
+const concepts = {
+  science: [
+    { id: 'sci1', name: 'Photosynthesis', status: 'Feedback Available' },
+    { id: 'sci2', name: 'Respiration', status: 'Not Started' },
+    { id: 'sci3', name: 'Light Reflection', status: 'In Progress' },
+    { id: 'sci4', name: 'Acids & Bases', status: 'Feedback Available' },
+    { id: 'sci5', name: 'Newton\'s Laws', status: 'Not Started' },
+  ],
+  math: [
+    { id: 'math1', name: 'Pythagorean Theorem', status: 'In Progress' },
+    { id: 'math2', name: 'Quadratic Equations', status: 'Not Started' },
+    { id: 'math3', name: 'Linear Functions', status: 'Feedback Available' },
+    { id: 'math4', name: 'Circles', status: 'Not Started' },
+  ],
+};
+
+type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
+
+const getStatusStyles = (status: ConceptStatus) => {
+  switch (status) {
+    case 'Feedback Available':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'In Progress':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'Not Started':
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
+const getButtonAction = (status: ConceptStatus) => {
+  switch (status) {
+    case 'Feedback Available':
+      return 'View Feedback';
+    case 'In Progress':
+      return 'Continue';
+    case 'Not Started':
+    default:
+      return 'Start';
+  }
+};
 
 export default function StudentDashboard() {
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(subjects[0]?.id || null);
-  const router = useRouter();
+  return (
+    <div className="container mx-auto py-8">
+      <header className="mb-8">
+        <h1 className="text-4xl font-bold text-primary">Select what you are working on today</h1>
+      </header>
 
-  // In a real app, you would get the studentId from the session.
-  const studentId = 'S101'; 
-  const studentAttempts = getStudentAttempts(studentId);
+      <Tabs defaultValue="science" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:w-1/2">
+          {subjects.map(subject => (
+            <TabsTrigger key={subject.id} value={subject.id}>
+              {subject.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-  const availableConcepts = selectedSubjectId
-    ? concepts.filter((c) => c.subjectId === selectedSubjectId)
-    : [];
+        <TabsContent value="science">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {concepts.science.map(concept => (
+              <ConceptCard key={concept.id} concept={concept} />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="math">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {concepts.math.map(concept => (
+              <ConceptCard key={concept.id} concept={concept} />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
 
-  const getAttemptForConcept = (conceptId: string): Attempt | undefined => {
-    return studentAttempts.find(a => a.conceptId === conceptId);
-  }
-  
-  const getBadgeVariant = (status: Attempt['status']) => {
-    switch (status) {
-      case 'Feedback Available': return 'default';
-      case 'In Progress': return 'secondary';
-      case 'Not Started': return 'outline';
-      default: return 'outline';
+function ConceptCard({ concept }: { concept: { id: string, name: string, status: ConceptStatus } }) {
+  const getHref = () => {
+    if (concept.status === 'Feedback Available') {
+      return `/student/feedback/${concept.id}`;
     }
-  }
+    return `/student/concept/${concept.id}`;
+  };
 
   return (
-    <div className="container py-12">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Select what you are working on today</h1>
-        </div>
-
-        <div className="space-y-4 mb-8">
-            <label className="text-sm font-medium text-muted-foreground">Subject</label>
-            <Select 
-                onValueChange={(value) => setSelectedSubjectId(value)}
-                defaultValue={selectedSubjectId || undefined}
-            >
-            <SelectTrigger>
-                <SelectValue placeholder="Select a subject" />
-            </SelectTrigger>
-            <SelectContent>
-                {subjects.map((subject: Subject) => (
-                <SelectItem key={subject.id} value={subject.id}>
-                    {subject.name}
-                </SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableConcepts.map((concept) => {
-                const attempt = getAttemptForConcept(concept.id);
-                return (
-                    <Card 
-                        key={concept.id} 
-                        className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all"
-                        onClick={() => router.push(attempt?.status === 'Feedback Available' ? `/student/feedback/${attempt.evaluationId}` : `/student/concept/${concept.id}`)}
-                    >
-                        <CardHeader>
-                            <CardTitle className="text-lg">{concept.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                           {attempt && <Badge variant={getBadgeVariant(attempt.status)}>{attempt.status}</Badge>}
-                        </CardContent>
-                    </Card>
-                )
-            })}
-        </div>
-      </div>
-    </div>
+    <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle>{concept.name}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <Badge className={getStatusStyles(concept.status)}>{concept.status}</Badge>
+      </CardContent>
+      <CardFooter>
+        <Button asChild className="w-full bg-accent hover:bg-accent/90">
+          <Link href={getHref()}>{getButtonAction(concept.status)}</Link>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }

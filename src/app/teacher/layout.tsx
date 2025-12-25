@@ -1,5 +1,3 @@
-import { Header } from "@/components/Header";
-
 export default function TeacherLayout({
   children,
 }: {
@@ -7,7 +5,6 @@ export default function TeacherLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
       <main className="flex-1">{children}</main>
     </div>
   );
