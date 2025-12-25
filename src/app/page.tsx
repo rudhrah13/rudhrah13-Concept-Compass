@@ -5,21 +5,29 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLogo } from '@/components/AppLogo';
 import { login } from '@/lib/auth/actions';
+import { users } from '@/lib/mock-data';
 
 export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
     const autoLogin = async () => {
-      // The form data is now optional in the login action
-      await login(new FormData());
-      // After login action sets the cookie, refresh the page
-      // so the middleware can correctly redirect.
-      router.refresh();
+      const studentUser = users.find(u => u.role === 'student');
+      if (studentUser) {
+        const formData = new FormData();
+        formData.append('role', studentUser.role);
+        formData.append('id', studentUser.id);
+        const result = await login(formData);
+        
+        if (result.success && result.user) {
+          // Directly push to the dashboard.
+          // The middleware will still validate the cookie on this navigation.
+          router.push(`/${result.user.role}/dashboard`);
+        }
+      }
     };
 
-    // Use a timeout to ensure the UI renders before login attempt,
-    // which can help in some race condition scenarios.
+    // Give the UI a moment to render before initiating the login and redirect.
     const timer = setTimeout(autoLogin, 100);
 
     return () => clearTimeout(timer);
