@@ -9,11 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAppState, type Role } from '@/hooks/use-app-state';
+import { useAppState } from '@/hooks/use-app-state';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { role, setRole } = useAppState();
+  const { setRole } = useAppState();
 
   const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,7 +43,7 @@ export default function LoginPage() {
             <CardDescription>Check understanding early. This is not an exam.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={role} onValueChange={(value) => setRole(value as Role)} className="w-full">
+            <Tabs defaultValue="student" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="student">Student</TabsTrigger>
                 <TabsTrigger value="teacher">Teacher</TabsTrigger>
