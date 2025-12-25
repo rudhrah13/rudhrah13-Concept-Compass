@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { ArrowLeft } from 'lucide-react';
 
 type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 
@@ -122,6 +123,9 @@ export default function StudentDashboard() {
 
   return (
     <div className="container mx-auto py-8">
+      <Button asChild variant="outline" className="mb-4">
+        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
+      </Button>
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-primary">Select what you are working on today</h1>
         <p className="text-muted-foreground mt-2">Choose a concept from the chapters below to get started.</p>
