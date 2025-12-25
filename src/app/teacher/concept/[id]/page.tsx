@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { ArrowLeft, ChevronRight, FlaskConical, Lightbulb, Loader2, Users } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -47,8 +48,9 @@ const getUnderstandingBadge = (level: UnderstandingLevel) => {
     }
 }
 
-export default function ConceptOverviewPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ConceptOverviewPage() {
+  const params = useParams();
+  const id = params.id as string;
   useProtectedRoute('teacher');
   const [concept, setConcept] = useState<ConceptOverview | null>(null);
   const [loading, setLoading] = useState(true);

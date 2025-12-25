@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,8 +21,9 @@ const mockConcept: Concept = {
   ],
 };
 
-export default function ConceptPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function ConceptPage() {
+  const params = useParams();
+  const id = params.id as string;
   useProtectedRoute('student');
   const router = useRouter();
   const [loading, setLoading] = useState(true);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
   BookOpen,
@@ -59,8 +60,9 @@ const getUnderstandingSummary = (level: UnderstandingLevel) => {
   }
 };
 
-export default function FeedbackPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function FeedbackPage() {
+  const params = useParams();
+  const id = params.id as string;
   useProtectedRoute('student');
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
   const [loading, setLoading] = useState(true);
