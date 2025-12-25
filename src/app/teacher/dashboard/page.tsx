@@ -105,25 +105,27 @@ function ConceptList({ concepts }: { concepts: ConceptData[] }) {
                 </TableHeader>
                 <TableBody>
                   {concepts.map((concept) => (
-                    <TableRow
-                      key={concept.id}
-                      className="cursor-pointer"
-                      asChild
-                    >
-                      <Link href={`/teacher/concept/${concept.id}`} className="flex-auto">
-                        <TableCell className="font-medium">{concept.name}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
+                    <TableRow key={concept.id} className="cursor-pointer">
+                      <TableCell className="font-medium p-0">
+                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4">
+                          {concept.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="p-0">
+                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4">
+                           <div className="flex items-center gap-2">
                               {getUnderstandingBadgeForConcept(concept)}
                               <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
                           </div>
-                        </TableCell>
-                         <TableCell className="text-right">
+                        </Link>
+                      </TableCell>
+                       <TableCell className="text-right p-0">
+                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center justify-end p-4">
                           <Button variant="ghost" size="icon" asChild>
                             <div><ChevronRight className="h-4 w-4" /></div>
                           </Button>
-                        </TableCell>
-                      </Link>
+                        </Link>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -132,5 +134,3 @@ function ConceptList({ concepts }: { concepts: ConceptData[] }) {
         </>
     );
 }
-
-    
