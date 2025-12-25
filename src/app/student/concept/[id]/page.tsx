@@ -21,6 +21,7 @@ export default function ConceptPage({ params }: { params: { id: string } }) {
         <div className="text-center mb-8">
           <p className="text-primary font-semibold">{concept.name}</p>
           <h1 className="text-4xl font-bold tracking-tight font-headline">Test Your Knowledge</h1>
+          <p className="text-md text-muted-foreground mt-2">Check concept understanding — not an exam.</p>
           <p className="text-lg text-muted-foreground mt-2">Answer the following questions in your own words.</p>
         </div>
 
