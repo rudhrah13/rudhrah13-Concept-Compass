@@ -1,0 +1,165 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "A student in a class.",
+      "type": "object",
+      "properties": {
+        "studentId": {
+          "type": "string",
+          "description": "The unique ID for the student."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the student."
+        },
+        "class": {
+          "type": "string",
+          "description": "The class the student belongs to."
+        }
+      },
+      "required": ["studentId", "name", "class"]
+    },
+    "concept": {
+      "title": "Concept",
+      "description": "An educational concept to be learned.",
+      "type": "object",
+      "properties": {
+        "conceptId": {
+          "type": "string",
+          "description": "The unique ID for the concept."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The subject the concept belongs to."
+        },
+        "chapter": {
+          "type": "string",
+          "description": "The chapter the concept is in."
+        },
+        "grade": {
+          "type": "number",
+          "description": "The grade level for the concept."
+        }
+      },
+      "required": ["conceptId", "subject", "chapter", "grade"]
+    },
+    "attempt": {
+      "title": "Attempt",
+      "description": "A student's attempt at a concept.",
+      "type": "object",
+      "properties": {
+        "attemptId": {
+          "type": "string",
+          "description": "The unique ID for the attempt."
+        },
+        "studentId": {
+          "type": "string",
+          "description": "The ID of the student who made the attempt."
+        },
+        "conceptId": {
+          "type": "string",
+          "description": "The ID of the concept being attempted."
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The questions asked in the attempt."
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The student's answers."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of the attempt."
+        }
+      },
+      "required": ["attemptId", "studentId", "conceptId", "questions", "answers", "timestamp"]
+    },
+    "evaluation": {
+      "title": "Evaluation",
+      "description": "An evaluation of a student's attempt.",
+      "type": "object",
+      "properties": {
+        "attemptId": {
+          "type": "string",
+          "description": "The ID of the attempt being evaluated."
+        },
+        "understanding": {
+          "type": "string",
+          "enum": ["Strong", "Partial", "Weak"],
+          "description": "The student's level of understanding."
+        },
+        "strength": {
+          "type": "string",
+          "description": "What the student did well."
+        },
+        "gap": {
+          "type": "string",
+          "description": "What the student missed."
+        },
+        "language": {
+          "type": "object",
+          "properties": {
+            "spelling": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "clarity": {
+              "type": "string"
+            },
+            "pronunciation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "correctExplanation": {
+          "type": "string",
+          "description": "A correct explanation of the concept."
+        }
+      },
+      "required": ["attemptId", "understanding", "strength", "gap", "correctExplanation"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": {
+        "$ref": "#/entities/student"
+      },
+      "description": "Stores individual student profiles."
+    },
+    "/concepts/{conceptId}": {
+      "schema": {
+        "$ref": "#/entities/concept"
+      },
+      "description": "Stores all available educational concepts."
+    },
+    "/attempts/{attemptId}": {
+      "schema": {
+        "$ref": "#/entities/attempt"
+      },
+      "description": "Stores each attempt a student makes on a concept."
+    },
+    "/evaluations/{evaluationId}": {
+      "schema": {
+        "$ref": "#/entities/evaluation"
+      },
+      "description": "Stores the evaluation linked to an attempt."
+    }
+  }
+}
