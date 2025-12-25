@@ -7,8 +7,8 @@ import type { User, UserRole } from '@/types';
 
 const COOKIE_NAME = 'concept-compass-session';
 
-export async function login(formData: FormData) {
-  // Default to student if no specific role/id is passed
+// This function now returns the cookie string to be set by the middleware
+export async function login(formData: FormData): Promise<string | undefined> {
   let role = formData.get('role') as UserRole | null;
   let id = formData.get('id') as string | null;
 
@@ -20,20 +20,22 @@ export async function login(formData: FormData) {
   const user = users.find((u) => u.role === role && u.id === id);
 
   if (!user) {
-    // This should not happen with the default, but it's good practice
-    // to keep the error handling.
-    return { success: false, error: 'Invalid credentials for this role.' };
+    return undefined;
   }
 
-  // Set cookie
-  cookies().set(COOKIE_NAME, JSON.stringify(user), {
+  const cookieStore = cookies();
+  const sessionValue = JSON.stringify(user);
+  
+  // Set cookie in the server action context
+  cookieStore.set(COOKIE_NAME, sessionValue, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24, // 1 day
     path: '/',
   });
-
-  return { success: true, user };
+  
+  // Return the cookie string so middleware can set it on the response
+  return `${COOKIE_NAME}=${encodeURIComponent(sessionValue)}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
 }
 
 export async function logout() {
