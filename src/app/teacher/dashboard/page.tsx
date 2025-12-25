@@ -1,33 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { ConceptPerformance, Student, UnderstandingLevel } from '@/types';
+import { useProtectedRoute } from '@/hooks/use-protected-route';
 
-type ConceptData = {
-  id: string;
-  name: string;
-  understanding: {
-    strong: number;
-    partial: number;
-    weak: number;
-  };
-};
 
-const dummyConcepts: ConceptData[] = [
+const dummyConcepts: ConceptPerformance[] = [
   {
     id: 'photosynthesis',
     name: 'Photosynthesis',
@@ -45,13 +31,7 @@ const dummyConcepts: ConceptData[] = [
   },
 ];
 
-type StudentData = {
-    id: string;
-    name: string;
-    rollNumber: string;
-};
-
-const dummyStudents: StudentData[] = [
+const dummyStudents: Student[] = [
     { id: '1', name: 'Anonymized Student 1', rollNumber: 'S101'},
     { id: '2', name: 'Anonymized Student 2', rollNumber: 'S102'},
     { id: '3', name: 'Anonymized Student 3', rollNumber: 'S103'},
@@ -60,6 +40,8 @@ const dummyStudents: StudentData[] = [
 ];
 
 export default function TeacherDashboard() {
+  useProtectedRoute('teacher');
+
   return (
     <div className="container py-10">
        <Button asChild variant="outline" className="mb-4">
@@ -88,12 +70,12 @@ export default function TeacherDashboard() {
         </TabsList>
         <TabsContent value="concepts">
             <Card className="mt-4">
-                <ConceptList concepts={dummyConcepts} />
+                <ConceptList />
             </Card>
         </TabsContent>
         <TabsContent value="students">
             <Card className="mt-4">
-                <StudentList students={dummyStudents} />
+                <StudentList />
             </Card>
         </TabsContent>
       </Tabs>
@@ -101,29 +83,54 @@ export default function TeacherDashboard() {
   );
 }
 
-function ConceptList({ concepts }: { concepts: ConceptData[] }) {
-    const getUnderstandingText = (concept: ConceptData) => {
+function ConceptList() {
+    const [concepts, setConcepts] = useState<ConceptPerformance[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchData = () => {
+        setLoading(true);
+        setError(null);
+        setTimeout(() => {
+            // To test error: setError("Failed to load concepts.");
+            setConcepts(dummyConcepts);
+            setLoading(false);
+        }, 1000);
+    };
+
+    useEffect(fetchData, []);
+
+    const getUnderstandingText = (concept: ConceptPerformance) => {
         const { strong, partial, weak } = concept.understanding;
         if (strong > 65) return `${strong}% Strong`;
         if (weak > 30) return `${weak}% Weak`;
         return `${partial}% Partial`;
     }
 
-    const getUnderstandingBadgeForConcept = (concept: ConceptData) => {
+    const getUnderstandingBadgeForConcept = (concept: ConceptPerformance) => {
         const { strong, weak } = concept.understanding;
-        if (strong > 65) return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>
-        if (weak > 30) return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>
-        return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>
+        if (strong > 65) return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
+        if (weak > 30) return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
+        return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
     }
 
-    return (
-        <>
-            <CardHeader>
-              <CardTitle>Concept Performance</CardTitle>
-              <CardDescription>Click on a concept to drill down into student-level understanding.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
+    const renderContent = () => {
+        if (loading) {
+            return <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin" /> Loading concepts...</div>;
+        }
+        if (error) {
+            return (
+                <div className="text-center p-10">
+                    <p className="text-red-500 mb-4">{error}</p>
+                    <Button onClick={fetchData}>Try Again</Button>
+                </div>
+            );
+        }
+        if (concepts.length === 0) {
+            return <div className="text-center p-10 text-muted-foreground">No concepts have been attempted yet.</div>;
+        }
+        return (
+            <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Concept Name</TableHead>
@@ -156,20 +163,56 @@ function ConceptList({ concepts }: { concepts: ConceptData[] }) {
                   ))}
                 </TableBody>
               </Table>
+        );
+    }
+
+    return (
+        <>
+            <CardHeader>
+              <CardTitle>Concept Performance</CardTitle>
+              <CardDescription>Click on a concept to drill down into student-level understanding.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {renderContent()}
             </CardContent>
         </>
     );
 }
 
-function StudentList({ students }: { students: StudentData[] }) {
-    return (
-        <>
-            <CardHeader>
-              <CardTitle>Student Roster</CardTitle>
-              <CardDescription>Click on a student to view their overall performance profile.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
+function StudentList() {
+    const [students, setStudents] = useState<Student[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchData = () => {
+        setLoading(true);
+        setError(null);
+        setTimeout(() => {
+            // To test error: setError("Failed to load students.");
+            setStudents(dummyStudents);
+            setLoading(false);
+        }, 1000);
+    };
+
+    useEffect(fetchData, []);
+
+     const renderContent = () => {
+        if (loading) {
+            return <div className="flex items-center justify-center p-10"><Loader2 className="h-6 w-6 animate-spin" /> Loading students...</div>;
+        }
+        if (error) {
+            return (
+                <div className="text-center p-10">
+                    <p className="text-red-500 mb-4">{error}</p>
+                    <Button onClick={fetchData}>Try Again</Button>
+                </div>
+            );
+        }
+        if (students.length === 0) {
+            return <div className="text-center p-10 text-muted-foreground">No students found.</div>;
+        }
+        return (
+             <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Student Name</TableHead>
@@ -199,6 +242,17 @@ function StudentList({ students }: { students: StudentData[] }) {
                   ))}
                 </TableBody>
               </Table>
+        );
+     }
+
+    return (
+        <>
+            <CardHeader>
+              <CardTitle>Student Roster</CardTitle>
+              <CardDescription>Click on a student to view their overall performance profile.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {renderContent()}
             </CardContent>
         </>
     );

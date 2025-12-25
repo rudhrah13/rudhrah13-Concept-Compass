@@ -2,19 +2,18 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Compass, ArrowLeft } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Compass } from 'lucide-react';
 
-type Role = 'student' | 'teacher';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAppState, type Role } from '@/hooks/use-app-state';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>('student');
+  const { role, setRole } = useAppState();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,7 +26,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-background">
-      <Button asChild variant="outline" className="absolute top-4 left-4">
+       <Button asChild variant="outline" className="absolute top-4 left-4">
         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
       </Button>
       <div className="w-full max-w-md p-4">
@@ -47,15 +46,15 @@ export default function LoginPage() {
                 <TabsTrigger value="teacher">Teacher</TabsTrigger>
               </TabsList>
               <form onSubmit={handleSubmit}>
-                <TabsContent value="student" className="space-y-4">
-                  <div className="space-y-2 pt-4">
+                <TabsContent value="student" className="space-y-4 pt-4">
+                  <div className="space-y-2">
                     <Label htmlFor="studentId">Student ID / Roll Number</Label>
                     <Input id="studentId" placeholder="e.g., S101" required />
                   </div>
                   <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In as Student</Button>
                 </TabsContent>
-                <TabsContent value="teacher" className="space-y-4">
-                  <div className="space-y-2 pt-4">
+                <TabsContent value="teacher" className="space-y-4 pt-4">
+                  <div className="space-y-2">
                     <Label htmlFor="teacherId">Email or Teacher ID</Label>
                     <Input id="teacherId" placeholder="e.g., teacher@school.edu" required />
                   </div>

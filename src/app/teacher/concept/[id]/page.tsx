@@ -1,31 +1,19 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Lightbulb, Users, FlaskConical, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, FlaskConical, Lightbulb, Loader2, Users } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { ConceptOverview, StudentAttemptSummary, UnderstandingLevel } from '@/types';
+import { useProtectedRoute } from '@/hooks/use-protected-route';
 
-
-type StudentAttempt = {
-    id: string;
-    name: string;
-    rollNumber: string;
-    understanding: 'Strong' | 'Partial' | 'Weak';
-    keyIssue: string;
-};
-
-const dummyConceptData = {
+const dummyConceptData: ConceptOverview = {
     id: 'photosynthesis',
     name: 'Photosynthesis',
     distribution: { strong: 5, partial: 12, weak: 3 },
@@ -38,30 +26,68 @@ const dummyConceptData = {
         'Re-explain the process using a visual diagram on the board.',
         'Ask students to explain the concept aloud to a partner.',
         'Use the real-life example of a houseplant needing sunlight.',
+    ],
+    studentAttempts: [
+        { studentId: '1', studentName: 'Anonymized Student 1', rollNumber: 'S101', understanding: 'Partial', keyIssue: 'Incomplete food steps' },
+        { studentId: '2', studentName: 'Anonymized Student 2', rollNumber: 'S102', understanding: 'Strong', keyIssue: 'None' },
+        { studentId: '3', studentName: 'Anonymized Student 3', rollNumber: 'S103', understanding: 'Weak', keyIssue: 'Role of CO2 missing' },
+        { studentId: '4', studentName: 'Anonymized Student 4', rollNumber: 'S104', understanding: 'Partial', keyIssue: 'Confused sunlight/heat' },
     ]
 };
 
-const dummyStudentAttempts: StudentAttempt[] = [
-    { id: '1', name: 'Anonymized Student 1', rollNumber: 'S101', understanding: 'Partial', keyIssue: 'Incomplete food steps' },
-    { id: '2', name: 'Anonymized Student 2', rollNumber: 'S102', understanding: 'Strong', keyIssue: 'None' },
-    { id: '3', name: 'Anonymized Student 3', rollNumber: 'S103', understanding: 'Weak', keyIssue: 'Role of CO2 missing' },
-    { id: '4', name: 'Anonymized Student 4', rollNumber: 'S104', understanding: 'Partial', keyIssue: 'Confused sunlight/heat' },
-];
-
-const getUnderstandingBadge = (level: 'Strong' | 'Partial' | 'Weak') => {
+const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
         case 'Strong':
-            return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>
+            return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
         case 'Weak':
-            return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>
+            return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
         case 'Partial':
         default:
-            return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>
+            return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
     }
 }
 
 export default function ConceptOverviewPage({ params }: { params: { id: string } }) {
-  const concept = dummyConceptData;
+  useProtectedRoute('teacher');
+  const [concept, setConcept] = useState<ConceptOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = () => {
+    setLoading(true);
+    setError(null);
+    setTimeout(() => {
+      // To test error: setError("Failed to load concept overview.");
+      // To test empty: setConcept({ ...dummyConceptData, studentAttempts: [] });
+      setConcept(dummyConceptData);
+      setLoading(false);
+    }, 1000);
+  };
+
+  useEffect(fetchData, [params.id]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept overview...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={fetchData}>Try Again</Button>
+      </div>
+    );
+  }
+  
+  if (!concept) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p>Concept data not found.</p>
+        <Button asChild variant="link"><Link href="/teacher/dashboard">Back to Dashboard</Link></Button>
+      </div>
+    );
+  }
+
   const totalStudents = concept.distribution.strong + concept.distribution.partial + concept.distribution.weak;
 
   return (
@@ -132,42 +158,48 @@ export default function ConceptOverviewPage({ params }: { params: { id: string }
                 <CardDescription>Review individual student answers and the feedback they received for this specific concept.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Student</TableHead>
-                            <TableHead>Understanding</TableHead>
-                             <TableHead>Key Issue</TableHead>
-                             <TableHead className="text-right sr-only">Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {dummyStudentAttempts.map((student) => (
-                            <TableRow key={student.id} className="group">
-                                <TableCell className="font-medium p-0">
-                                    <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
-                                        {student.name} ({student.rollNumber})
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="p-0">
-                                     <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
-                                        {getUnderstandingBadge(student.understanding)}
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground p-0">
-                                    <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
-                                        {student.keyIssue}
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="text-right p-0">
-                                     <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                                    </Link>
-                                </TableCell>
+                {concept.studentAttempts.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student</TableHead>
+                                <TableHead>Understanding</TableHead>
+                                <TableHead>Key Issue</TableHead>
+                                <TableHead className="text-right sr-only">Action</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {concept.studentAttempts.map((student) => (
+                                <TableRow key={student.studentId} className="group">
+                                    <TableCell className="font-medium p-0">
+                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                            {student.studentName} ({student.rollNumber})
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="p-0">
+                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                            {getUnderstandingBadge(student.understanding)}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground p-0">
+                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                            {student.keyIssue}
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell className="text-right p-0">
+                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                                        </Link>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="text-center py-10 text-muted-foreground">
+                        No student responses yet for this concept.
+                    </div>
+                )}
             </CardContent>
         </Card>
       </div>
@@ -187,4 +219,3 @@ function DistributionPill({ label, count, total, color }: { label: string, count
         </div>
     );
 }
-    

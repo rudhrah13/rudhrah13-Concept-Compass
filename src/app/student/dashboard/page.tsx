@@ -1,32 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import type { Concept, Chapter, ConceptStatus } from '@/types';
+import { useProtectedRoute } from '@/hooks/use-protected-route';
 
-type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 
-interface Concept {
-  id: string;
-  name: string;
-  status: ConceptStatus;
-}
-
-interface Chapter {
-  id: string;
-  title: string;
-  icon: string;
-  concepts: Concept[];
-}
-
-const chapters: Chapter[] = [
+const mockChapters: Chapter[] = [
   {
     id: 'chapter1',
     title: 'Plants & Life Processes',
@@ -109,8 +97,31 @@ const getButtonAction = (status: ConceptStatus) => {
 };
 
 export default function StudentDashboard() {
+  useProtectedRoute('student');
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyNeedingAttention, setShowOnlyNeedingAttention] = useState(false);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Simulate API call
+    setTimeout(() => {
+      // To test error state: setError("Failed to load concepts."); setLoading(false); return;
+      setChapters(mockChapters);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    // Simulate refetch
+     setTimeout(() => {
+      setChapters(mockChapters);
+      setLoading(false);
+    }, 1000);
+  };
 
   const filteredChapters = chapters.map(chapter => {
     const filteredConcepts = chapter.concepts.filter(concept => {
@@ -121,9 +132,10 @@ export default function StudentDashboard() {
     return { ...chapter, concepts: filteredConcepts };
   }).filter(chapter => chapter.concepts.length > 0);
 
+
   return (
     <div className="container mx-auto py-8">
-      <Button asChild variant="outline" className="mb-4">
+       <Button asChild variant="outline" className="mb-4">
         <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
       </Button>
       <header className="mb-8">
@@ -152,26 +164,42 @@ export default function StudentDashboard() {
             </div>
         </div>
 
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          {filteredChapters.map(chapter => (
-            <AccordionItem value={chapter.id} key={chapter.id} className="border-b-0 rounded-lg bg-card shadow-sm">
-              <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl">{chapter.icon}</span>
-                  {chapter.title}
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-4">
-                <div className="flex flex-col gap-3">
-                  {chapter.concepts.map(concept => (
-                    <ConceptRow key={concept.id} concept={concept} />
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-        {filteredChapters.length === 0 && (
+        {loading ? (
+            <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Loading concepts...</span>
+            </div>
+        ) : error ? (
+            <div className="text-center py-10">
+                <p className="text-red-500 mb-4">{error}</p>
+                <Button onClick={handleRetry}>Try Again</Button>
+            </div>
+        ) : chapters.length === 0 ? (
+            <div className="text-center py-10">
+                <p className="text-muted-foreground">No concepts have been assigned yet.</p>
+            </div>
+        ) : (
+            <Accordion type="single" collapsible className="w-full space-y-2">
+            {filteredChapters.map(chapter => (
+                <AccordionItem value={chapter.id} key={chapter.id} className="border-b-0 rounded-lg bg-card shadow-sm">
+                <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
+                    <div className="flex items-center gap-4">
+                    <span className="text-2xl">{chapter.icon}</span>
+                    {chapter.title}
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-4">
+                    <div className="flex flex-col gap-3">
+                    {chapter.concepts.map(concept => (
+                        <ConceptRow key={concept.id} concept={concept} />
+                    ))}
+                    </div>
+                </AccordionContent>
+                </AccordionItem>
+            ))}
+            </Accordion>
+        )}
+        {!loading && !error && chapters.length > 0 && filteredChapters.length === 0 && (
             <div className="text-center py-10">
                 <p className="text-muted-foreground">No concepts found. Try adjusting your search or filter.</p>
             </div>

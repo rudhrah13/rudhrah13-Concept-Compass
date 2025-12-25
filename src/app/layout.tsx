@@ -1,9 +1,14 @@
 import type {Metadata} from 'next';
-import { Inter } from 'next/font/google';
+import { PT_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AppStateProvider } from '@/hooks/use-app-state';
 
-const inter = Inter({ subsets: ['latin'] });
+const ptSans = PT_Sans({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-pt-sans',
+});
 
 export const metadata: Metadata = {
   title: 'Concept Compass',
@@ -17,8 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full bg-background" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased h-full`}>
-        {children}
+      <body className={`${ptSans.variable} font-sans antialiased h-full`}>
+        <AppStateProvider>
+          {children}
+        </AppStateProvider>
         <Toaster />
       </body>
     </html>

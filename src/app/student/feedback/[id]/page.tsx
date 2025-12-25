@@ -1,31 +1,30 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
-  Check,
-  X,
-  Lightbulb,
   ArrowLeft,
-  ThumbsUp,
-  AlertTriangle,
   BookOpen,
+  Check,
+  Lightbulb,
+  Loader2,
   Pencil,
   Puzzle,
+  ThumbsUp,
+  X,
+  AlertTriangle
 } from 'lucide-react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Separator } from '@/components/ui/separator';
 
-type UnderstandingLevel = 'Strong' | 'Partial' | 'Weak';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import type { StudentAttempt, UnderstandingLevel } from '@/types';
+import { featureFlags } from '@/lib/feature-flags';
+import { useProtectedRoute } from '@/hooks/use-protected-route';
 
 // Mock Data for the feedback page
-const mockAttemptData = {
+const mockAttemptData: StudentAttempt = {
   conceptName: 'Photosynthesis',
   questions: [
     'Explain photosynthesis in your own words.',
@@ -36,11 +35,9 @@ const mockAttemptData = {
     'If there is no sun, the plant will die because it cannot make food.',
   ],
   feedback: {
-    conceptUnderstanding: 'Partial' as UnderstandingLevel,
-    conceptFeedback: {
-      strength: 'You correctly identified that plants use sunlight to make food.',
-      gap: 'The role of carbon dioxide was missing, and the explanation of the food-making process could be more detailed.',
-    },
+    understandingLevel: 'Partial',
+    strength: 'You correctly identified that plants use sunlight to make food.',
+    gap: 'The role of carbon dioxide was missing, and the explanation of the food-making process could be more detailed.',
     languageFeedback: {
       spelling: ['photosynthesis'],
       clarity: 'Try using shorter sentences to explain the steps.',
@@ -50,34 +47,66 @@ const mockAttemptData = {
   },
 };
 
-
 const getUnderstandingSummary = (level: UnderstandingLevel) => {
   switch (level) {
     case 'Strong':
-      return {
-        icon: <Check className="h-5 w-5 text-green-500" />,
-        text: 'You’ve got it!',
-        emoji: '✅',
-      };
+      return { icon: <Check className="h-5 w-5 text-green-500" />, text: 'You’ve got it!', emoji: '✅' };
     case 'Partial':
-      return {
-        icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
-        text: 'You’re almost there!',
-        emoji: '👍',
-      };
+      return { icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />, text: 'You’re almost there!', emoji: '👍' };
     case 'Weak':
     default:
-      return {
-        icon: <X className="h-5 w-5 text-red-500" />,
-        text: 'Let’s improve this!',
-        emoji: '🔄',
-      };
+      return { icon: <X className="h-5 w-5 text-red-500" />, text: 'Let’s improve this!', emoji: '🔄' };
   }
 };
 
-export default function FeedbackPage() {
-  const attempt = mockAttemptData;
-  const summary = getUnderstandingSummary(attempt.feedback.conceptUnderstanding);
+export default function FeedbackPage({ params }: { params: { id: string } }) {
+  useProtectedRoute('student');
+  const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = () => {
+    setLoading(true);
+    setError(null);
+    // Simulate API call
+    setTimeout(() => {
+      // To test error: setError("Failed to load feedback.");
+      // To test empty: setAttempt(null);
+      setAttempt(mockAttemptData);
+      setLoading(false);
+    }, 1000);
+  };
+
+  useEffect(fetchData, [params.id]);
+  
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading feedback...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={fetchData}>Try Again</Button>
+      </div>
+    );
+  }
+
+  if (!attempt) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p>Feedback will appear after the student completes this concept.</p>
+         <Button asChild variant="outline" size="sm" className="mt-4">
+            <Link href="/student/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Concepts
+            </Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const summary = getUnderstandingSummary(attempt.feedback.understandingLevel);
+  const showLanguageFeedback = featureFlags.ENABLE_LANGUAGE_FEEDBACK && attempt.feedback.languageFeedback;
 
   return (
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
@@ -114,7 +143,6 @@ export default function FeedbackPage() {
         
         <h2 className="text-xl font-semibold text-center text-muted-foreground pt-2">AI Generated Feedback</h2>
 
-
         {/* Section 1: Understanding Summary */}
         <Card>
           <CardContent className="flex items-center justify-between p-4">
@@ -123,14 +151,14 @@ export default function FeedbackPage() {
               <span className="font-semibold text-lg">{summary.text} {summary.emoji}</span>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-              <span>{attempt.feedback.conceptUnderstanding === 'Strong' ? 'Clear' : attempt.feedback.conceptUnderstanding === 'Partial' ? 'Almost there' : 'Needs work'}</span>
+              <span>{attempt.feedback.understandingLevel === 'Strong' ? 'Clear' : attempt.feedback.understandingLevel === 'Partial' ? 'Almost there' : 'Needs work'}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Section 2: Concept Feedback */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {attempt.feedback.conceptFeedback.strength && (
+          {attempt.feedback.strength && (
             <Card className="border-green-200 bg-green-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
                 <ThumbsUp className="h-5 w-5 text-green-600" />
@@ -141,12 +169,12 @@ export default function FeedbackPage() {
               <CardContent className="p-3 pt-0 text-green-900">
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.conceptFeedback.strength}</span>
+                  <span>{attempt.feedback.strength}</span>
                 </p>
               </CardContent>
             </Card>
           )}
-          {attempt.feedback.conceptFeedback.gap && (
+          {attempt.feedback.gap && (
             <Card className="border-yellow-200 bg-yellow-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
                 <Lightbulb className="h-5 w-5 text-yellow-600" />
@@ -157,7 +185,7 @@ export default function FeedbackPage() {
               <CardContent className="p-3 pt-0 text-yellow-900">
                 <p className="flex items-start gap-2">
                   <X className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.conceptFeedback.gap}</span>
+                  <span>{attempt.feedback.gap}</span>
                 </p>
               </CardContent>
             </Card>
@@ -165,8 +193,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* Section 3: Expression Tips */}
-        {(attempt.feedback.languageFeedback.spelling ||
-          attempt.feedback.languageFeedback.clarity) && (
+        {showLanguageFeedback && (attempt.feedback.languageFeedback?.spelling || attempt.feedback.languageFeedback?.clarity) && (
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-base font-semibold">
