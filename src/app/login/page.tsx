@@ -15,13 +15,16 @@ export default function LoginPage() {
   const router = useRouter();
   const { role, setRole } = useAppState();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (role === 'student') {
-      router.push('/student/dashboard');
-    } else {
-      router.push('/teacher/dashboard');
-    }
+    setRole('student');
+    router.push('/student/dashboard');
+  };
+
+  const handleTeacherSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setRole('teacher');
+    router.push('/teacher/dashboard');
   };
 
   return (
@@ -40,31 +43,33 @@ export default function LoginPage() {
             <CardDescription>Check understanding early. This is not an exam.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={role} onValueChange={(value) => setRole(value as Role)} className="w-full">
+            <Tabs defaultValue={role} onValueChange={(value) => setRole(value as Role)} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="student">Student</TabsTrigger>
                 <TabsTrigger value="teacher">Teacher</TabsTrigger>
               </TabsList>
-              <form onSubmit={handleSubmit}>
-                <TabsContent value="student" className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="studentId">Student ID / Roll Number</Label>
-                    <Input id="studentId" placeholder="e.g., S101" required />
-                  </div>
-                  <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In as Student</Button>
+                <TabsContent value="student">
+                  <form onSubmit={handleStudentSubmit} className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="studentId">Student ID / Roll Number</Label>
+                      <Input id="studentId" placeholder="e.g., S101" required />
+                    </div>
+                    <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In as Student</Button>
+                  </form>
                 </TabsContent>
-                <TabsContent value="teacher" className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="teacherId">Email or Teacher ID</Label>
-                    <Input id="teacherId" placeholder="e.g., teacher@school.edu" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" required />
-                  </div>
-                  <Button type="submit" className="w-full">Sign In as Teacher</Button>
+                <TabsContent value="teacher">
+                  <form onSubmit={handleTeacherSubmit} className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="teacherId">Email or Teacher ID</Label>
+                      <Input id="teacherId" placeholder="e.g., teacher@school.edu" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input id="password" type="password" required />
+                    </div>
+                    <Button type="submit" className="w-full">Sign In as Teacher</Button>
+                  </form>
                 </TabsContent>
-              </form>
             </Tabs>
           </CardContent>
         </Card>
