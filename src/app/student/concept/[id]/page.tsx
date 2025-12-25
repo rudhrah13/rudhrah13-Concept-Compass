@@ -21,7 +21,8 @@ const mockConcept: Concept = {
   ],
 };
 
-export default function ConceptPage({ params: { id } }: { params: { id: string } }) {
+export default function ConceptPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   useProtectedRoute('student');
   const router = useRouter();
   const [loading, setLoading] = useState(true);

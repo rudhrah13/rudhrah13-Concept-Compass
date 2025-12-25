@@ -47,7 +47,8 @@ const getUnderstandingBadge = (level: UnderstandingLevel) => {
     }
 }
 
-export default function ConceptOverviewPage({ params: { id } }: { params: { id: string } }) {
+export default function ConceptOverviewPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   useProtectedRoute('teacher');
   const [concept, setConcept] = useState<ConceptOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +65,9 @@ export default function ConceptOverviewPage({ params: { id } }: { params: { id: 
     }, 1000);
   };
 
-  useEffect(fetchData, [id]);
+  useEffect(() => {
+    fetchData()
+  }, [id]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept overview...</div>;
