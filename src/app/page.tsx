@@ -3,40 +3,25 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import { login } from '@/lib/auth/actions';
-import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     const autoLogin = async () => {
       const formData = new FormData();
       formData.append('role', 'student');
       formData.append('id', 'S101');
-      const result = await login(formData);
-      if (result.success && result.user) {
-        toast({
-          title: 'Login Successful',
-          description: `Welcome back, ${result.user.name}! Redirecting...`,
-        });
-        router.push(`/${result.user.role}/dashboard`);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Auto-Login Failed',
-          description: result.error,
-        });
-      }
+      await login(formData);
+      // After login action sets the cookie, refresh the page
+      // so the middleware can correctly redirect.
+      router.refresh();
     };
 
-    // We trigger the auto-login immediately. The middleware should handle redirects
-    // if a session already exists, but this ensures login happens if there's no session.
     autoLogin();
-  }, [router, toast]);
+  }, [router]);
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
