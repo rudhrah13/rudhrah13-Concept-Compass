@@ -15,10 +15,32 @@ import { GraduationCap, School, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
   const [year, setYear] = useState<number | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
+    const autoLogin = async () => {
+      const formData = new FormData();
+      formData.append('role', 'student');
+      formData.append('id', 'S101');
+      const result = await login(formData);
+      if (result.success) {
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back, ${result.user?.name}! Redirecting to your dashboard...`,
+        });
+        router.push(`/${result.user?.role}/dashboard`);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Auto-Login Failed',
+          description: result.error,
+        });
+      }
+    };
+    autoLogin();
     setYear(new Date().getFullYear());
-  }, []);
+  }, [router, toast]);
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
@@ -32,10 +54,12 @@ export default function LoginPage() {
         <Card className="shadow-2xl">
           <CardHeader>
             <CardTitle className="text-center text-2xl">Welcome Back</CardTitle>
-            <CardDescription className="text-center">Select your role to sign in</CardDescription>
+            <CardDescription className="text-center">Please wait while we sign you in...</CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginTabs />
+            <div className="flex justify-center items-center p-8">
+                <p>Authenticating as student...</p>
+            </div>
           </CardContent>
         </Card>
         <footer className="text-center mt-8 text-sm text-muted-foreground">
@@ -97,9 +121,9 @@ function LoginForm({ role }: { role: UserRole }) {
       <input type="hidden" name="role" value={role} />
       <div className="space-y-2">
         <Label htmlFor={`${role}-id`}>{idLabel}</Label>
-        <Input id={`${role}-id`} name="id" placeholder={`Enter your ${idLabel}`} required />
+        <Input id={`${role}-id`} name="id" placeholder={`Enter your ${idLabel}`} required suppressHydrationWarning />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
         {isLoading ? 'Signing In...' : 'Sign In'}
       </Button>
     </form>
