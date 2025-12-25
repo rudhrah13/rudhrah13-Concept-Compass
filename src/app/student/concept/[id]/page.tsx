@@ -21,7 +21,7 @@ const mockConcept: Concept = {
   ],
 };
 
-export default function ConceptPage({ params }: { params: { id: string } }) {
+export default function ConceptPage({ params: { id } }: { params: { id: string } }) {
   useProtectedRoute('student');
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -35,12 +35,12 @@ export default function ConceptPage({ params }: { params: { id: string } }) {
       setConceptData(mockConcept);
       setLoading(false);
     }, 500);
-  }, [params.id]);
+  }, [id]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // In a real app, you would save the answers here
-    router.push(`/student/feedback/${params.id}`);
+    router.push(`/student/feedback/${id}`);
   };
 
   const handleRetry = () => {
