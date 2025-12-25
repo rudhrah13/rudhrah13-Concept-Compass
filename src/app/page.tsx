@@ -1,20 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AppLogo } from '@/components/AppLogo';
 import { login } from '@/lib/auth/actions';
 import { useToast } from '@/hooks/use-toast';
-import type { UserRole } from '@/types';
-import { GraduationCap, School, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
-  const [year, setYear] = useState<number | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -24,12 +18,12 @@ export default function LoginPage() {
       formData.append('role', 'student');
       formData.append('id', 'S101');
       const result = await login(formData);
-      if (result.success) {
+      if (result.success && result.user) {
         toast({
           title: 'Login Successful',
-          description: `Welcome back, ${result.user?.name}! Redirecting to your dashboard...`,
+          description: `Welcome back, ${result.user.name}! Redirecting...`,
         });
-        router.push(`/${result.user?.role}/dashboard`);
+        router.push(`/${result.user.role}/dashboard`);
       } else {
         toast({
           variant: 'destructive',
@@ -38,8 +32,10 @@ export default function LoginPage() {
         });
       }
     };
+
+    // We trigger the auto-login immediately. The middleware should handle redirects
+    // if a session already exists, but this ensures login happens if there's no session.
     autoLogin();
-    setYear(new Date().getFullYear());
   }, [router, toast]);
 
   return (
@@ -53,79 +49,14 @@ export default function LoginPage() {
 
         <Card className="shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-center text-2xl">Welcome Back</CardTitle>
+            <CardTitle className="text-center text-2xl">Authenticating</CardTitle>
             <CardDescription className="text-center">Please wait while we sign you in...</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex justify-center items-center p-8">
-                <p>Authenticating as student...</p>
-            </div>
+          <CardContent className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </CardContent>
         </Card>
-        <footer className="text-center mt-8 text-sm text-muted-foreground">
-          {year && <p>&copy; {year} Concept Compass. All rights reserved.</p>}
-        </footer>
       </div>
     </main>
-  );
-}
-
-function LoginTabs() {
-  const [activeTab, setActiveTab] = useState<UserRole>('student');
-
-  return (
-    <Tabs defaultValue="student" onValueChange={(value) => setActiveTab(value as UserRole)}>
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="student"><GraduationCap className="w-4 h-4 mr-2"/>Student</TabsTrigger>
-        <TabsTrigger value="teacher"><School className="w-4 h-4 mr-2"/>Teacher</TabsTrigger>
-        <TabsTrigger value="admin"><ShieldCheck className="w-4 h-4 mr-2"/>Admin</TabsTrigger>
-      </TabsList>
-      <TabsContent value="student"><LoginForm role="student" /></TabsContent>
-      <TabsContent value="teacher"><LoginForm role="teacher" /></TabsContent>
-      <TabsContent value="admin"><LoginForm role="admin" /></TabsContent>
-    </Tabs>
-  );
-}
-
-function LoginForm({ role }: { role: UserRole }) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const idLabel = role === 'student' ? 'Student ID / Roll Number' : `${role.charAt(0).toUpperCase() + role.slice(1)} ID`;
-  
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsLoading(true);
-    const formData = new FormData(event.currentTarget);
-    const result = await login(formData);
-
-    if (result.success) {
-      toast({
-        title: "Login Successful",
-        description: `Welcome! Redirecting to your dashboard...`,
-      });
-      router.push(`/${result.user?.role}/dashboard`);
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: result.error,
-      });
-      setIsLoading(false);
-    }
-  };
-  
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-      <input type="hidden" name="role" value={role} />
-      <div className="space-y-2">
-        <Label htmlFor={`${role}-id`}>{idLabel}</Label>
-        <Input id={`${role}-id`} name="id" placeholder={`Enter your ${idLabel}`} required suppressHydrationWarning />
-      </div>
-      <Button type="submit" className="w-full" disabled={isLoading} suppressHydrationWarning>
-        {isLoading ? 'Signing In...' : 'Sign In'}
-      </Button>
-    </form>
   );
 }
