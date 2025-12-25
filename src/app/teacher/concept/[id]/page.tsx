@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Lightbulb, Users, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Users, FlaskConical, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
@@ -128,8 +128,8 @@ export default function ConceptOverviewPage({ params }: { params: { id: string }
 
         <Card>
             <CardHeader>
-                <CardTitle>Student Submissions</CardTitle>
-                <CardDescription>Review individual student answers and the feedback they received.</CardDescription>
+                <CardTitle>Student Submissions for this Concept</CardTitle>
+                <CardDescription>Review individual student answers and the feedback they received for this specific concept.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -138,21 +138,31 @@ export default function ConceptOverviewPage({ params }: { params: { id: string }
                             <TableHead>Student</TableHead>
                             <TableHead>Understanding</TableHead>
                              <TableHead>Key Issue</TableHead>
+                             <TableHead className="text-right sr-only">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {dummyStudentAttempts.map((student) => (
-                            <TableRow key={student.id}>
-                                <TableCell className="font-medium">
-                                    <Link href={`/teacher/student/${student.id}`} className="hover:underline">
+                            <TableRow key={student.id} className="group">
+                                <TableCell className="font-medium p-0">
+                                    <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
                                         {student.name} ({student.rollNumber})
                                     </Link>
                                 </TableCell>
-                                <TableCell>
-                                    {getUnderstandingBadge(student.understanding)}
+                                <TableCell className="p-0">
+                                     <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        {getUnderstandingBadge(student.understanding)}
+                                    </Link>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">
-                                    {student.keyIssue}
+                                <TableCell className="text-muted-foreground p-0">
+                                    <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        {student.keyIssue}
+                                    </Link>
+                                </TableCell>
+                                <TableCell className="text-right p-0">
+                                     <Link href={`/teacher/student/${student.id}?concept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                                    </Link>
                                 </TableCell>
                             </TableRow>
                         ))}

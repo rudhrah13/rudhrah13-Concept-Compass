@@ -159,7 +159,7 @@ export default function TeacherStudentOverviewPage() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Patterns</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Learning Patterns</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-muted-foreground space-y-2">
@@ -186,15 +186,16 @@ export default function TeacherStudentOverviewPage() {
                     <CardContent>
                          <div className="flex flex-col gap-3">
                             {student.recentConcepts.map(concept => (
-                                <Link key={concept.id} href={`/teacher/student/${studentId}?concept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors">
+                                <Link key={concept.id} href={`/teacher/student/${studentId}?concept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
                                     <div>
                                         <p className="font-medium">{concept.name}</p>
                                         <p className="text-sm text-muted-foreground">{concept.date}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         {getUnderstandingBadge(concept.status)}
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                                     </div>
+
                                 </Link>
                             ))}
                         </div>
@@ -234,7 +235,7 @@ function StudentConceptFeedbackView({ student, conceptId }: { student: typeof mo
         <Card>
             <CardHeader>
                 <CardTitle>Student's Submission</CardTitle>
-                <CardDescription>The questions asked and the answers provided by the student.</CardDescription>
+                <CardDescription>The questions asked and the answers provided by the student for this concept.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {attempt.questions.map((question, index) => (
@@ -330,7 +331,7 @@ function StudentConceptFeedbackView({ student, conceptId }: { student: typeof mo
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1" className="border-b-0">
             <Card className="p-0">
-              <AccordionTrigger className="flex w-full items-center justify-between p-4 text-base font-semibold text-primary hover:no-underline">
+              <AccordionTrigger className="flex w-full items-center justify-between p-4 text-base font-semibold text-primary hover:no-underline" suppressHydrationWarning>
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   See a clear explanation

@@ -15,6 +15,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ConceptData = {
   id: string;
@@ -44,6 +45,20 @@ const dummyConcepts: ConceptData[] = [
   },
 ];
 
+type StudentData = {
+    id: string;
+    name: string;
+    rollNumber: string;
+};
+
+const dummyStudents: StudentData[] = [
+    { id: '1', name: 'Anonymized Student 1', rollNumber: 'S101'},
+    { id: '2', name: 'Anonymized Student 2', rollNumber: 'S102'},
+    { id: '3', name: 'Anonymized Student 3', rollNumber: 'S103'},
+    { id: '4', name: 'Anonymized Student 4', rollNumber: 'S104'},
+    { id: '5', name: 'Anonymized Student 5', rollNumber: 'S105'},
+];
+
 export default function TeacherDashboard() {
   return (
     <div className="container py-10">
@@ -66,9 +81,22 @@ export default function TeacherDashboard() {
         </div>
       </header>
 
-      <Card>
-        <ConceptList concepts={dummyConcepts} />
-      </Card>
+      <Tabs defaultValue="concepts" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="concepts">Concepts</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+        </TabsList>
+        <TabsContent value="concepts">
+            <Card className="mt-4">
+                <ConceptList concepts={dummyConcepts} />
+            </Card>
+        </TabsContent>
+        <TabsContent value="students">
+            <Card className="mt-4">
+                <StudentList students={dummyStudents} />
+            </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -100,30 +128,71 @@ function ConceptList({ concepts }: { concepts: ConceptData[] }) {
                   <TableRow>
                     <TableHead>Concept Name</TableHead>
                     <TableHead>Class Understanding</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right sr-only">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {concepts.map((concept) => (
-                    <TableRow key={concept.id} className="cursor-pointer">
+                    <TableRow key={concept.id} className="group">
+                        <TableCell className="font-medium p-0">
+                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
+                                {concept.name}
+                            </Link>
+                        </TableCell>
+                        <TableCell className="p-0">
+                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
+                                <div className="flex items-center gap-2">
+                                    {getUnderstandingBadgeForConcept(concept)}
+                                    <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
+                                </div>
+                            </Link>
+                        </TableCell>
+                        <TableCell className="text-right p-0">
+                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                            </Link>
+                        </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+        </>
+    );
+}
+
+function StudentList({ students }: { students: StudentData[] }) {
+    return (
+        <>
+            <CardHeader>
+              <CardTitle>Student Roster</CardTitle>
+              <CardDescription>Click on a student to view their overall performance profile.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Roll Number</TableHead>
+                    <TableHead className="text-right sr-only">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student) => (
+                    <TableRow key={student.id} className="group">
                       <TableCell className="font-medium p-0">
-                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4">
-                          {concept.name}
+                         <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
+                            {student.name}
                         </Link>
                       </TableCell>
                       <TableCell className="p-0">
-                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4">
-                           <div className="flex items-center gap-2">
-                              {getUnderstandingBadgeForConcept(concept)}
-                              <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
-                          </div>
+                        <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
+                            {student.rollNumber}
                         </Link>
                       </TableCell>
                        <TableCell className="text-right p-0">
-                        <Link href={`/teacher/concept/${concept.id}`} className="flex items-center justify-end p-4">
-                          <Button variant="ghost" size="icon" asChild>
-                            <div><ChevronRight className="h-4 w-4" /></div>
-                          </Button>
+                        <Link href={`/teacher/student/${student.id}`} className="flex items-center justify-end p-4 h-full">
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                         </Link>
                       </TableCell>
                     </TableRow>
