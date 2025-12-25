@@ -84,12 +84,12 @@ const mockStudentAttemptData = {
 const getUnderstandingSummary = (level: UnderstandingLevel) => {
   switch (level) {
     case 'Strong':
-      return { icon: <Check className="h-5 w-5 text-green-500" />, text: 'Strong Understanding' };
+      return { icon: <Check className="h-5 w-5 text-green-500" />, text: 'Strong Understanding', emoji: '✅' };
     case 'Partial':
-      return { icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />, text: 'Partial Understanding' };
+      return { icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />, text: 'Partial Understanding', emoji: '👍' };
     case 'Weak':
     default:
-      return { icon: <X className="h-5 w-5 text-red-500" />, text: 'Weak Understanding' };
+      return { icon: <X className="h-5 w-5 text-red-500" />, text: 'Weak Understanding', emoji: '🔄' };
   }
 };
 
@@ -214,11 +214,19 @@ function StudentConceptFeedbackView({ student, conceptId }: { student: typeof mo
 
   return (
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
-      <Button asChild variant="outline" size="sm" className="mb-4">
-        <Link href={`/teacher/student/${student.id}`}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student Profile
-        </Link>
-      </Button>
+      <div className="flex justify-between items-center mb-4">
+        <Button asChild variant="outline" size="sm">
+            <Link href={`/teacher/student/${student.id}`}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student Profile
+            </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+            <Link href={`/teacher/concept/${conceptId}`}>
+             Back to Concept Overview
+            </Link>
+        </Button>
+      </div>
+
 
       <header className="mb-6 rounded-lg border bg-card text-card-foreground shadow-sm p-4">
         <div className="flex justify-between items-center">
@@ -257,9 +265,11 @@ function StudentConceptFeedbackView({ student, conceptId }: { student: typeof mo
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               {summary.icon}
-              <span className="font-semibold text-lg">{summary.text}</span>
+              <span className="font-semibold text-lg">{summary.text} {summary.emoji}</span>
             </div>
-            {getUnderstandingBadge(attempt.feedback.conceptUnderstanding)}
+             <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              <span>{attempt.feedback.conceptUnderstanding === 'Strong' ? 'Clear' : attempt.feedback.conceptUnderstanding === 'Partial' ? 'Almost there' : 'Needs work'}</span>
+            </div>
           </CardContent>
         </Card>
 
