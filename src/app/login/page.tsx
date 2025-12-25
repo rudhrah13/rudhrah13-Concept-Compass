@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Compass } from 'lucide-react';
+import { Compass, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,7 +19,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="relative flex items-center justify-center min-h-screen bg-background">
+      <Button asChild variant="outline" className="absolute top-4 left-4">
+        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
+      </Button>
       <div className="w-full max-w-md p-4">
         <Link href="/" className="flex items-center justify-center mb-8 gap-2 text-primary">
             <Compass className="w-8 h-8" />
