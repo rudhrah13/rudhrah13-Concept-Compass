@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,12 @@ import type { UserRole } from '@/types';
 import { GraduationCap, School, ShieldCheck } from 'lucide-react';
 
 export default function LoginPage() {
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
@@ -33,7 +39,7 @@ export default function LoginPage() {
           </CardContent>
         </Card>
         <footer className="text-center mt-8 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Concept Compass. All rights reserved.</p>
+          {year && <p>&copy; {year} Concept Compass. All rights reserved.</p>}
         </footer>
       </div>
     </main>
