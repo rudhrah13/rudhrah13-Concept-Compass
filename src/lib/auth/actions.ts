@@ -8,16 +8,20 @@ import type { User, UserRole } from '@/types';
 const COOKIE_NAME = 'concept-compass-session';
 
 export async function login(formData: FormData) {
-  const role = formData.get('role') as UserRole;
-  const id = formData.get('id') as string;
+  // Default to student if no specific role/id is passed
+  let role = formData.get('role') as UserRole | null;
+  let id = formData.get('id') as string | null;
 
   if (!role || !id) {
-    return { success: false, error: 'Role and ID are required.' };
+    role = 'student';
+    id = 'S101';
   }
 
   const user = users.find((u) => u.role === role && u.id === id);
 
   if (!user) {
+    // This should not happen with the default, but it's good practice
+    // to keep the error handling.
     return { success: false, error: 'Invalid credentials for this role.' };
   }
 

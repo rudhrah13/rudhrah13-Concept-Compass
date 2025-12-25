@@ -11,16 +11,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     const autoLogin = async () => {
-      const formData = new FormData();
-      formData.append('role', 'student');
-      formData.append('id', 'S101');
-      await login(formData);
+      // The form data is now optional in the login action
+      await login(new FormData());
       // After login action sets the cookie, refresh the page
       // so the middleware can correctly redirect.
       router.refresh();
     };
 
-    autoLogin();
+    // Use a timeout to ensure the UI renders before login attempt,
+    // which can help in some race condition scenarios.
+    const timer = setTimeout(autoLogin, 100);
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   return (
