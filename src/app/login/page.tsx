@@ -26,8 +26,8 @@ export default function LoginPage() {
   const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Find student in our demo data
-    const student = students.find(s => s.studentId === studentId && s.name.toLowerCase() === studentName.toLowerCase());
+    // Find student in our demo data, ignoring case for the name
+    const student = students.find(s => s.studentId.toLowerCase() === studentId.toLowerCase() && s.name.toLowerCase() === studentName.toLowerCase());
 
     if (student) {
         localStorage.setItem('role', 'student');
