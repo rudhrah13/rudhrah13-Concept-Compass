@@ -1,8 +1,6 @@
-// page.tsx
-
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Check, ThumbsUp, AlertTriangle, Lightbulb, BookOpen, Pencil, Puzzle, X } from 'lucide-react';
@@ -234,7 +232,13 @@ export default function ConceptPage() {
   const id = params.id as string;
   useProtectedRoute('student');
   const router = useRouter();
+  
+  const [conceptData, setConceptData] = useState<DemoConcept | null>(null);
+  const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
   const [loading, setLoading] = useState(true);
+
+  // States from previous implementation that are not fully wired up but kept for structure
+  const [sessionState, setSessionState] = useState<'idle' | 'recording' | 'paused' | 'processing' | 'waitingForAI' | 'submitting' | 'error' | 'denied'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [conceptData, setConceptData] = useState<Concept | null>(null);
   const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
@@ -244,12 +248,26 @@ export default function ConceptPage() {
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      // To test error state: setError("Failed to load concept.");
-      setConceptData(mockConcept);
-      setLoading(false);
-    }, 500);
+    initializeDemoData();
+    const concept = getConcepts().find(c => c.conceptId === id) || null;
+    setConceptData(concept);
+    setLoading(false);
+
+    // Voice recognition setup and cleanup from previous implementation
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setSessionState('denied');
+        setError('Your browser does not support voice recognition. Please use Chrome or Firefox.');
+      }
+    }
+    return () => {
+      // stopRecording(true);
+      if (audioRef.current) {
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+      }
+    };
   }, [id]);
 
   useEffect(() => {
@@ -308,26 +326,11 @@ export default function ConceptPage() {
     };
   }, [callId]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // In a real app, you would save the answers here
-    router.push(`/student/feedback/${id}`);
-  };
-
-  const handleRetry = () => {
-    setLoading(true);
-    setError(null);
-    // Simulate refetch
-    setTimeout(() => {
-      setConceptData(mockConcept);
-      setLoading(false);
-    }, 500);
-  };
 
   const startCall = async () => {
     try {
       const studentName = localStorage.getItem('studentName') || 'Student';
-      const topic = conceptData?.name || 'the concept';
+      const topic = conceptData?.conceptName || 'the concept';
       
       console.log('🎤 Starting Vapi call for student:', {
         studentName,
@@ -356,33 +359,20 @@ export default function ConceptPage() {
   if (loading) {
     return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept...</div>;
   }
-
-  if (error) {
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={handleRetry}>Try Again</Button>
-      </div>
-    );
-  }
-
+  
   if (!conceptData) {
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p>Concept not found.</p>
-        <Button asChild variant="link"><Link href="/student/dashboard">Back to Concepts</Link></Button>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen">Concept not found.</div>;
   }
-
+  
   return (
     <div className="container mx-auto py-10 max-w-4xl">
+      <audio ref={audioRef} className="hidden" />
       <Button asChild variant="outline" className="mb-4">
         <Link href="/student/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Concepts</Link>
       </Button>
 
       <header className="mb-8">
-        <p className="text-lg font-semibold text-primary">{conceptData.name}</p>
+        <p className="text-lg font-semibold text-primary">{conceptData.conceptName}</p>
         <h1 className="text-3xl font-bold">Explain the idea in your own words.</h1>
         <p className="text-muted-foreground mt-2">This is not an exam.</p>
       </header>
