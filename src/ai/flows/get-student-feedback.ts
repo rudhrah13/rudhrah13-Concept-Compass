@@ -8,34 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
-import type { StudentAttempt } from '@/types';
-
-
-export const GetStudentFeedbackInputSchema = z.object({
-  attemptId: z.string(),
-});
-export type GetStudentFeedbackInput = z.infer<typeof GetStudentFeedbackInputSchema>;
-
-// The output schema should match the StudentAttempt type from src/types/index.ts
-export const GetStudentFeedbackOutputSchema = z.object({
-  conceptName: z.string(),
-  questions: z.array(z.string()),
-  studentAnswers: z.array(z.string()),
-  feedback: z.object({
-    understandingLevel: z.enum(['Strong', 'Partial', 'Weak']),
-    strength: z.string(),
-    gap: z.string(),
-    languageFeedback: z.object({
-      spelling: z.array(z.string()).optional(),
-      clarity: z.string().optional(),
-      pronunciation: z.array(z.string()).optional(),
-    }).optional(),
-    correctExplanation: z.string(),
-  }),
-});
-
-export type GetStudentFeedbackOutput = z.infer<typeof GetStudentFeedbackOutputSchema>;
+import { GetStudentFeedbackInputSchema, GetStudentFeedbackOutputSchema, type GetStudentFeedbackInput, type GetStudentFeedbackOutput, type StudentAttempt } from '@/types';
 
 
 export async function getStudentFeedback(input: GetStudentFeedbackInput): Promise<GetStudentFeedbackOutput> {

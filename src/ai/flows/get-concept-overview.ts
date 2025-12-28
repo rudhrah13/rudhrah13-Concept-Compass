@@ -8,33 +8,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { GetConceptOverviewInputSchema, GetConceptOverviewOutputSchema, type GetConceptOverviewInput, type GetConceptOverviewOutput } from '@/types';
 
-export const GetConceptOverviewInputSchema = z.object({
-  conceptId: z.string(),
-  class: z.string(),
-});
-export type GetConceptOverviewInput = z.infer<typeof GetConceptOverviewInputSchema>;
-
-export const GetConceptOverviewOutputSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    distribution: z.object({
-        strong: z.number(),
-        partial: z.number(),
-        weak: z.number(),
-    }),
-    keyGaps: z.array(z.string()),
-    suggestedActions: z.array(z.string()),
-    studentAttempts: z.array(z.object({
-        studentId: z.string(),
-        studentName: z.string(),
-        rollNumber: z.string(),
-        understanding: z.enum(['Strong', 'Partial', 'Weak']),
-        keyIssue: z.string(),
-    })),
-});
-export type GetConceptOverviewOutput = z.infer<typeof GetConceptOverviewOutputSchema>;
 
 export async function getConceptOverview(input: GetConceptOverviewInput): Promise<GetConceptOverviewOutput> {
   return getConceptOverviewFlow(input);

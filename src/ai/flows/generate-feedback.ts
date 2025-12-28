@@ -8,23 +8,8 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { GenerateFeedbackInputSchema, GenerateFeedbackOutputSchema, type GenerateFeedbackInput, type GenerateFeedbackOutput } from '@/types';
 
-const GenerateFeedbackInputSchema = z.object({
-  concept: z.string().describe('The concept the student is being questioned on.'),
-  question: z.string().describe('The question the student is answering.'),
-  studentAnswer: z.string().describe('The student answer to the question.'),
-});
-export type GenerateFeedbackInput = z.infer<typeof GenerateFeedbackInputSchema>;
-
-const GenerateFeedbackOutputSchema = z.object({
-  correctPoints: z.string().describe('What the student got correct.'),
-  incorrectPoints: z.string().describe('What the student got incorrect or unclear.'),
-  correctlyFramedExplanation: z
-    .string()
-    .describe('A correctly framed explanation of the concept.'),
-});
-export type GenerateFeedbackOutput = z.infer<typeof GenerateFeedbackOutputSchema>;
 
 export async function generateFeedback(input: GenerateFeedbackInput): Promise<GenerateFeedbackOutput> {
   return generateFeedbackFlow(input);
