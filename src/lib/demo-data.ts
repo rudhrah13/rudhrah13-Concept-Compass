@@ -4,21 +4,22 @@ import type { DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
 
 const defaultStudents: DemoStudent[] = [
   { "studentId": "S001", "name": "Aarav", "class": "5A" },
-  { "studentId": "S002", "name": "Riya", "class": "5A" },
-  { "studentId": "S003", "name": "Kabir", "class": "5A" },
-  { "studentId": "S004", "name": "Ananya", "class": "5A" },
-  { "studentId": "S005", "name": "Vivaan", "class": "5A" },
-  { "studentId": "S006", "name": "Diya", "class": "5A" },
-  { "studentId": "S007", "name": "Arjun", "class": "5A" },
-  { "studentId": "S008", "name": "Saanvi", "class": "5A" },
+  { "studentId": "S002", "name": "Advik", "class": "5A" },
+  { "studentId": "S003", "name": "Ananya", "class": "5A" },
+  { "studentId": "S004", "name": "Anika", "class": "5A" },
+  { "studentId": "S005", "name": "Arjun", "class": "5A" },
+  { "studentId": "S006", "name": "Avani", "class": "5A" },
+  { "studentId": "S007", "name": "Ayaan", "class": "5A" },
+  { "studentId": "S008", "name": "Diya", "class": "5A" },
   { "studentId": "S009", "name": "Ishaan", "class": "5A" },
-  { "studentId": "S010", "name": "Myra", "class": "5A" },
-  { "studentId": "S011", "name": "Ayaan", "class": "5A" },
-  { "studentId": "S012", "name": "Avani", "class": "5A" },
-  { "studentId": "S013", "name": "Reyansh", "class": "5A" },
-  { "studentId": "S014", "name": "Anika", "class": "5A" },
-  { "studentId": "S015", "name": "Advik", "class": "5A" },
+  { "studentId": "S010", "name": "Kabir", "class": "5A" },
+  { "studentId": "S011", "name": "Myra", "class": "5A" },
+  { "studentId": "S012", "name": "Reyansh", "class": "5A" },
+  { "studentId": "S013", "name": "Riya", "class": "5A" },
+  { "studentId": "S014", "name": "Saanvi", "class": "5A" },
+  { "studentId": "S015", "name": "Vivaan", "class": "5A" }
 ];
+
 
 const defaultConcepts: DemoConcept[] = [
   {
@@ -109,7 +110,7 @@ const defaultEvaluations: DemoEvaluation[] = [
   },
   {
     "sessionId": "E002",
-    "studentId": "S002",
+    "studentId": "S013", // Riya
     "conceptId": "photosynthesis",
     "date": "2025-01-12",
      "conversation": {
@@ -136,7 +137,7 @@ const defaultEvaluations: DemoEvaluation[] = [
   },
    {
     "sessionId": "E003",
-    "studentId": "S003",
+    "studentId": "S010", // Kabir
     "conceptId": "photosynthesis",
     "date": "2025-01-13",
      "conversation": {
@@ -159,7 +160,7 @@ const defaultEvaluations: DemoEvaluation[] = [
   },
   {
     "sessionId": "E004",
-    "studentId": "S001",
+    "studentId": "S001", // Aarav
     "conceptId": "evaporation",
     "date": "2025-01-14",
     "conversation": {
@@ -186,7 +187,7 @@ const defaultEvaluations: DemoEvaluation[] = [
   },
   {
     "sessionId": "E005",
-    "studentId": "S004",
+    "studentId": "S003", // Ananya
     "conceptId": "parts-of-plant",
     "date": "2025-01-15",
     "conversation": {

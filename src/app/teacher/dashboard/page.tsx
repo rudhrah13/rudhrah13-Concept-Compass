@@ -243,7 +243,7 @@ function StudentList() {
                         rollNumber: s.studentId,
                         status: status,
                     }
-                });
+                }).sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
                 setStudents(transformedStudents);
             } catch (e) {
                 setError("Failed to load students.");
@@ -258,12 +258,12 @@ function StudentList() {
      const getStatusIndicator = (status: StudentStatus) => {
         switch (status) {
             case 'Struggling':
-                return <Circle className="h-2.5 w-2.5 fill-red-500 text-red-500" />;
+                return <><Circle className="h-2.5 w-2.5 fill-red-500 text-red-500 mr-2" />Struggling</>;
             case 'Needs attention':
-                return <Circle className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />;
+                return <><Circle className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500 mr-2" />Needs attention</>;
             case 'Doing well':
             default:
-                return <Circle className="h-2.5 w-2.5 fill-green-500 text-green-500" />;
+                return <><Circle className="h-2.5 w-2.5 fill-green-500 text-green-500 mr-2" />Doing well</>;
         }
     };
 
@@ -287,9 +287,10 @@ function StudentList() {
              <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50%]">Student Name</TableHead>
-                    <TableHead className="w-[50%]">Roll Number</TableHead>
-                    <TableHead className="text-right sr-only w-[50px]">Actions</TableHead>
+                    <TableHead className="w-[40%]">Student Name</TableHead>
+                    <TableHead className="w-[25%]">Roll Number</TableHead>
+                    <TableHead className="w-[35%]">Overall Performance</TableHead>
+                    <TableHead className="text-right sr-only w-[50px]">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -297,13 +298,17 @@ function StudentList() {
                     <TableRow key={student.id} className="group">
                       <TableCell className="font-medium p-0">
                          <Link href={`/teacher/student/${student.id}`} className="flex items-center gap-2 p-4 h-full">
-                            {getStatusIndicator(student.status)}
                             {student.name}
                         </Link>
                       </TableCell>
-                      <TableCell className="p-0">
+                      <TableCell className="p-0 text-muted-foreground">
                         <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
                             {student.rollNumber}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="p-0">
+                         <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full text-sm">
+                           {getStatusIndicator(student.status)}
                         </Link>
                       </TableCell>
                        <TableCell className="text-right p-0">
