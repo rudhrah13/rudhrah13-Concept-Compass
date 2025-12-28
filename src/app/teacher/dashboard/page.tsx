@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -87,7 +87,8 @@ function ConceptList() {
 
                     return {
                         id: concept.conceptId,
-                        name: concept.chapter,
+                        name: concept.conceptName,
+                        chapter: concept.chapter,
                         understanding,
                     };
                 });
@@ -98,10 +99,17 @@ function ConceptList() {
             } finally {
                 setLoading(false);
             }
-        }, 500); // Reduced delay
+        }, 500);
     };
 
     useEffect(fetchData, []);
+
+    const groupedConcepts = useMemo(() => {
+        return concepts.reduce((acc, concept) => {
+            (acc[concept.chapter] = acc[concept.chapter] || []).push(concept);
+            return acc;
+        }, {} as Record<string, ConceptPerformance[]>);
+    }, [concepts]);
 
     const getUnderstandingText = (concept: ConceptPerformance) => {
         const { strong, partial, weak } = concept.understanding;
@@ -138,33 +146,40 @@ function ConceptList() {
             <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Concept Name</TableHead>
+                    <TableHead>Concept</TableHead>
                     <TableHead>Class Understanding</TableHead>
                     <TableHead className="text-right sr-only">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {concepts.map((concept) => (
-                    <TableRow key={concept.id} className="group">
-                        <TableCell className="font-medium p-0">
-                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
-                                {concept.name}
-                            </Link>
-                        </TableCell>
-                        <TableCell className="p-0">
-                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
-                                <div className="flex items-center gap-2">
-                                    {getUnderstandingBadgeForConcept(concept)}
-                                    <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
-                                </div>
-                            </Link>
-                        </TableCell>
-                        <TableCell className="text-right p-0">
-                             <Link href={`/teacher/concept/${concept.id}`} className="flex items-center justify-end p-4 h-full">
-                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                            </Link>
-                        </TableCell>
-                    </TableRow>
+                  {Object.entries(groupedConcepts).map(([chapter, concepts]) => (
+                    <>
+                        <TableRow key={chapter} className="bg-muted/50 hover:bg-muted/50">
+                            <TableCell colSpan={3} className="font-bold text-foreground">{chapter}</TableCell>
+                        </TableRow>
+                        {concepts.map((concept) => (
+                            <TableRow key={concept.id} className="group">
+                                <TableCell className="font-medium p-0">
+                                    <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
+                                        {concept.name}
+                                    </Link>
+                                </TableCell>
+                                <TableCell className="p-0">
+                                    <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
+                                        <div className="flex items-center gap-2">
+                                            {getUnderstandingBadgeForConcept(concept)}
+                                            <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
+                                        </div>
+                                    </Link>
+                                </TableCell>
+                                <TableCell className="text-right p-0">
+                                    <Link href={`/teacher/concept/${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                                    </Link>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </>
                   ))}
                 </TableBody>
               </Table>
@@ -206,7 +221,7 @@ function StudentList() {
             } finally {
                 setLoading(false);
             }
-        }, 500); // Reduced delay
+        }, 500);
     };
 
     useEffect(fetchData, []);

@@ -77,7 +77,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
     const fromConceptEvaluation = fromConceptId ? getEvaluations().find(e => e.studentId === studentId && e.conceptId === fromConceptId) : null;
 
     const backUrl = fromConceptId ? `/teacher/concept/${fromConceptId}` : '/teacher/dashboard';
-    const backText = fromConceptId ? 'Back to Concept Overview' : 'Back to Dashboard';
+    const backText = fromConceptId ? `Back to ${fromConcept?.conceptName}` : 'Back to Dashboard';
 
     const fetchData = () => {
         setLoading(true);
@@ -130,7 +130,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                         const concept = allConcepts.find(c => c.conceptId === e.conceptId);
                         return {
                             id: e.conceptId,
-                            name: concept?.chapter || 'Unknown Concept',
+                            name: concept?.conceptName || 'Unknown Concept',
                             status: e.evaluation.understanding,
                             date: new Date(e.date).toLocaleDateString(),
                         }
@@ -193,13 +193,13 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                     <Card className="bg-blue-50 border-blue-200">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-blue-800"><Sparkles className="w-5 h-5" />Concept in Context</CardTitle>
-                            <CardDescription>You are viewing this student's profile in the context of the '{fromConcept.chapter}' concept.</CardDescription>
+                            <CardDescription>You are viewing this student's profile in the context of the '{fromConcept.conceptName}' concept.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {fromConceptEvaluation ? (
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-background border">
                                     <div className='space-y-1'>
-                                        <p className="font-semibold">{fromConcept.chapter}</p>
+                                        <p className="font-semibold">{fromConcept.conceptName}</p>
                                         <div className='flex items-center gap-2'>
                                             <span className="text-sm text-muted-foreground">Status:</span>
                                             {getUnderstandingBadge(fromConceptEvaluation.evaluation.understanding)}
@@ -210,7 +210,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                                     </Button>
                                 </div>
                             ) : (
-                                <p className="text-muted-foreground text-sm">This student has not yet attempted the '{fromConcept.chapter}' concept.</p>
+                                <p className="text-muted-foreground text-sm">This student has not yet attempted the '{fromConcept.conceptName}' concept.</p>
                             )}
                         </CardContent>
                     </Card>
@@ -386,7 +386,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         <div className="flex justify-between items-center">
             <div>
                 <h1 className="text-2xl font-bold">{student.name} ({student.studentId})</h1>
-                <p className="text-muted-foreground">{concept.chapter}</p>
+                <p className="text-muted-foreground">{concept.conceptName}</p>
             </div>
             <Badge variant="outline">Teacher View</Badge>
         </div>
@@ -402,7 +402,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
             </CardHeader>
             <CardContent className="space-y-4">
                 {evaluation.conversation.questionsAsked.map((q, index) => (
-                   <div key={index} className="rounded-lg border bg-background p-4 space-y-4">
+                    <div key={index} className="rounded-lg border bg-background p-4 space-y-4">
                         {/* Question Block */}
                         <div className="flex items-start gap-3">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">

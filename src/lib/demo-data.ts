@@ -23,24 +23,56 @@ const defaultStudents: DemoStudent[] = [
 const defaultConcepts: DemoConcept[] = [
   {
     "conceptId": "photosynthesis",
+    "conceptName": "Photosynthesis",
+    "subject": "Science",
+    "chapter": "Plants",
+    "grade": 5
+  },
+  {
+    "conceptId": "parts-of-plant",
+    "conceptName": "Parts of a Plant",
+    "subject": "Science",
+    "chapter": "Plants",
+    "grade": 5
+  },
+  {
+    "conceptId": "functions-of-roots",
+    "conceptName": "Functions of Roots",
     "subject": "Science",
     "chapter": "Plants",
     "grade": 5
   },
   {
     "conceptId": "evaporation",
+    "conceptName": "Evaporation",
+    "subject": "Science",
+    "chapter": "Water",
+    "grade": 5
+  },
+  {
+    "conceptId": "condensation",
+    "conceptName": "Condensation",
+    "subject": "Science",
+    "chapter": "Water",
+    "grade": 5
+  },
+  {
+    "conceptId": "water-cycle",
+    "conceptName": "Water Cycle",
     "subject": "Science",
     "chapter": "Water",
     "grade": 5
   },
   {
     "conceptId": "respiration",
+    "conceptName": "Respiration",
     "subject": "Science",
     "chapter": "Animals & Human Body",
     "grade": 5
   },
   {
     "conceptId": "light-reflection",
+    "conceptName": "Light Reflection",
     "subject": "Science",
     "chapter": "Energy, Light & Sound",
     "grade": 5
@@ -175,6 +207,38 @@ const defaultEvaluations: DemoEvaluation[] = [
       }
     },
     "correctExplanation": "Evaporation is the process where a liquid, like water, turns into a gas or vapor. On a hot day, the sun's energy causes water molecules to move faster and escape into the air as water vapor."
+  },
+  {
+    "sessionId": "E005",
+    "studentId": "S004",
+    "conceptId": "parts-of-plant",
+    "date": "2025-01-15",
+    "conversation": {
+      "questionsAsked": [
+        {
+          "questionType": "explain",
+          "questionText": "Can you name the main parts of a plant?"
+        },
+        {
+          "questionType": "probe",
+          "questionText": "What about the part that makes food? What is it called?"
+        }
+      ],
+      "studentResponses": [
+        "A plant has roots, a stem, and flowers.",
+        "Oh, yes, and leaves. The leaves make the food."
+      ]
+    },
+    "evaluation": {
+      "understanding": "Strong",
+      "strength": "Student correctly identified all major parts of a plant.",
+      "gap": "Initially missed 'leaves' but self-corrected upon prompting.",
+      "language": {
+        "clarity": "High",
+        "confidence": "High"
+      }
+    },
+    "correctExplanation": "The main parts of a plant are the roots, which anchor the plant and absorb water; the stem, which supports the plant; the leaves, which perform photosynthesis; and the flowers, which are involved in reproduction."
   }
 ];
 
@@ -184,10 +248,8 @@ export function initializeDemoData() {
     if (!localStorage.getItem('students')) {
       localStorage.setItem('students', JSON.stringify(defaultStudents));
     }
-    if (!localStorage.getItem('concepts')) {
-      localStorage.setItem('concepts', JSON.stringify(defaultConcepts));
-    }
-    // Always overwrite evaluations to ensure the latest data structure
+    // Always overwrite concepts and evaluations to ensure the latest data structure
+    localStorage.setItem('concepts', JSON.stringify(defaultConcepts));
     localStorage.setItem('evaluations', JSON.stringify(defaultEvaluations));
   }
 }

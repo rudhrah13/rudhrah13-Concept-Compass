@@ -32,7 +32,8 @@ export default function ConceptOverviewPage() {
   const params = useParams();
   const id = params.id as string; // conceptId
   useProtectedRoute('teacher');
-  const [concept, setConcept] = useState<ConceptOverview | null>(null);
+  const [conceptData, setConceptData] = useState<DemoConcept | null>(null);
+  const [conceptOverview, setConceptOverview] = useState<ConceptOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,12 +44,13 @@ export default function ConceptOverviewPage() {
 
     setTimeout(() => {
       try {
-        const conceptData: DemoConcept | undefined = getConcepts().find(c => c.conceptId === id);
-        if (!conceptData) {
+        const foundConcept: DemoConcept | undefined = getConcepts().find(c => c.conceptId === id);
+        if (!foundConcept) {
             setError("Concept not found.");
             setLoading(false);
             return;
         }
+        setConceptData(foundConcept);
 
         const allEvaluations: DemoEvaluation[] = getEvaluations();
         const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === id);
@@ -64,14 +66,14 @@ export default function ConceptOverviewPage() {
         const sortedGaps = Object.keys(gapCounts).sort((a, b) => gapCounts[b] - gapCounts[a]);
         
         const overview: ConceptOverview = {
-            id: conceptData.conceptId,
-            name: conceptData.chapter,
+            id: foundConcept.conceptId,
+            name: foundConcept.conceptName,
             distribution: {
                 strong: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Strong').length,
                 partial: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Partial').length,
                 weak: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Weak').length,
             },
-            keyGaps: sortedGaps.slice(0, 3), // Show top 3 common gaps
+            keyGaps: sortedGaps.slice(0, 3),
             suggestedActions: [ // This can be made dynamic later
                 'Re-explain the process using a visual diagram on the board.',
                 'Ask students to explain the concept aloud to a partner.',
@@ -89,13 +91,13 @@ export default function ConceptOverviewPage() {
             }),
         };
         
-        setConcept(overview);
+        setConceptOverview(overview);
       } catch(e) {
           setError("Failed to load concept overview.");
       } finally {
         setLoading(false);
       }
-    }, 500); // Reduced delay
+    }, 500);
   };
 
   useEffect(() => {
@@ -115,7 +117,7 @@ export default function ConceptOverviewPage() {
     );
   }
   
-  if (!concept) {
+  if (!conceptOverview || !conceptData) {
     return (
       <div className="container mx-auto py-10 text-center">
         <p>Concept data not found.</p>
@@ -124,7 +126,7 @@ export default function ConceptOverviewPage() {
     );
   }
 
-  const totalStudents = concept.distribution.strong + concept.distribution.partial + concept.distribution.weak;
+  const totalStudents = conceptOverview.distribution.strong + conceptOverview.distribution.partial + conceptOverview.distribution.weak;
 
   return (
     <div className="container py-10">
@@ -140,14 +142,18 @@ export default function ConceptOverviewPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{concept.name}</BreadcrumbPage>
+                <BreadcrumbLink asChild><Link href="/teacher/dashboard">{conceptData.chapter}</Link></BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{conceptOverview.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
-        <h1 className="text-4xl font-bold mb-2">Concept Overview: {concept.name}</h1>
+        <h1 className="text-4xl font-bold mb-2">Concept: {conceptOverview.name}</h1>
         <div className="flex items-center gap-4 text-muted-foreground">
           <span>Class: <strong>5A</strong></span>
-          <span>Subject: <strong>Science</strong></span>
+          <span>Subject: <strong>{conceptData.subject}</strong></span>
         </div>
       </header>
 
@@ -159,9 +165,9 @@ export default function ConceptOverviewPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <DistributionPill label="Strong" count={concept.distribution.strong} total={totalStudents} color="bg-green-500" />
-                    <DistributionPill label="Partial" count={concept.distribution.partial} total={totalStudents} color="bg-yellow-500" />
-                    <DistributionPill label="Weak" count={concept.distribution.weak} total={totalStudents} color="bg-red-500" />
+                    <DistributionPill label="Strong" count={conceptOverview.distribution.strong} total={totalStudents} color="bg-green-500" />
+                    <DistributionPill label="Partial" count={conceptOverview.distribution.partial} total={totalStudents} color="bg-yellow-500" />
+                    <DistributionPill label="Weak" count={conceptOverview.distribution.weak} total={totalStudents} color="bg-red-500" />
                 </div>
             </CardContent>
         </Card>
@@ -172,9 +178,9 @@ export default function ConceptOverviewPage() {
                     <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Most common confusions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {concept.keyGaps.length > 0 ? (
+                    {conceptOverview.keyGaps.length > 0 ? (
                         <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                            {concept.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
+                            {conceptOverview.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
                         </ul>
                     ) : (
                         <p className="text-muted-foreground">No common gaps identified yet.</p>
@@ -187,7 +193,7 @@ export default function ConceptOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                        {concept.suggestedActions.map((action, i) => <li key={i}>{action}</li>)}
+                        {conceptOverview.suggestedActions.map((action, i) => <li key={i}>{action}</li>)}
                     </ul>
                 </CardContent>
             </Card>
@@ -199,7 +205,7 @@ export default function ConceptOverviewPage() {
                 <CardDescription>Review individual student answers and the feedback they received for this specific concept.</CardDescription>
             </CardHeader>
             <CardContent>
-                {concept.studentAttempts.length > 0 ? (
+                {conceptOverview.studentAttempts.length > 0 ? (
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -210,25 +216,25 @@ export default function ConceptOverviewPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {concept.studentAttempts.map((student) => (
+                            {conceptOverview.studentAttempts.map((student) => (
                                 <TableRow key={student.studentId} className="group">
                                     <TableCell className="font-medium p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {student.studentName} ({student.rollNumber})
                                         </Link>
                                     </TableCell>
                                     <TableCell className="p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {getUnderstandingBadge(student.understanding)}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {student.keyIssue}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-right p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center justify-end p-4 h-full">
                                             <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                                         </Link>
                                     </TableCell>

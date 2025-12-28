@@ -25,6 +25,7 @@ export interface Chapter {
 export interface ConceptPerformance {
   id: string;
   name: string;
+  chapter: string;
   understanding: {
     strong: number;
     partial: number;
@@ -34,7 +35,7 @@ export interface ConceptPerformance {
 
 // Teacher Dashboard - Student Roster
 export interface Student {
-    id: string;
+    id:string;
     name: string;
     rollNumber: string;
 }
@@ -109,6 +110,7 @@ export interface DemoStudent {
 
 export interface DemoConcept {
   conceptId: string;
+  conceptName: string;
   subject: string;
   chapter: string;
   grade: number;

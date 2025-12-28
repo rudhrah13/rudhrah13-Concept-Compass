@@ -90,7 +90,7 @@ export default function ConceptPage() {
   const startCall = async () => {
     try {
       const studentName = localStorage.getItem('studentName') || 'Student';
-      const topic = conceptData?.chapter || 'the concept';
+      const topic = conceptData?.conceptName || 'the concept';
       
       await startTeachingCall(studentName, topic);
     } catch (err) {
@@ -123,7 +123,7 @@ export default function ConceptPage() {
       </Button>
 
       <header className="mb-8">
-        <p className="text-lg font-semibold text-primary">{conceptData.chapter}</p>
+        <p className="text-lg font-semibold text-primary">{conceptData.conceptName}</p>
         <h1 className="text-3xl font-bold">Explain the idea in your own words.</h1>
         <p className="text-muted-foreground mt-2">This is not an exam.</p>
       </header>

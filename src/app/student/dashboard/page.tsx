@@ -71,7 +71,7 @@ export default function StudentDashboard() {
             }
             return {
                 id: c.conceptId,
-                name: c.chapter, // The UI uses chapter as the name
+                name: c.conceptName,
                 status: status,
                 questions: [] // Not needed for this view
             };
@@ -128,8 +128,7 @@ export default function StudentDashboard() {
 
   const filteredChapters = chapters.map(chapter => {
     const filteredConcepts = chapter.concepts.filter(concept => {
-      const conceptData = getConcepts().find(c => c.conceptId === concept.id);
-      const matchesSearch = conceptData?.chapter.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = concept.name.toLowerCase().includes(searchQuery.toLowerCase()) || chapter.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter = !showOnlyNeedingAttention || (concept.status === 'Not Started' || concept.status === 'In Progress');
       return matchesSearch && matchesFilter;
     });
@@ -183,7 +182,7 @@ export default function StudentDashboard() {
                 <p className="text-muted-foreground">No concepts have been assigned yet.</p>
             </div>
         ) : (
-            <Accordion type="single" collapsible className="w-full space-y-2">
+            <Accordion type="single" collapsible className="w-full space-y-2" defaultValue={filteredChapters[0]?.id}>
             {filteredChapters.map(chapter => (
                 <AccordionItem value={chapter.id} key={chapter.id} className="border-b-0 rounded-lg bg-card shadow-sm">
                 <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
@@ -214,7 +213,6 @@ export default function StudentDashboard() {
 }
 
 function ConceptRow({ concept }: { concept: Concept }) {
-    const conceptData = getConcepts().find(c => c.conceptId === concept.id);
   const getHref = () => {
     if (concept.status === 'Feedback Available') {
       return `/student/feedback/${concept.id}`;
@@ -225,7 +223,7 @@ function ConceptRow({ concept }: { concept: Concept }) {
   return (
     <div className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors">
         <div>
-            <span className="font-medium text-foreground">{conceptData?.chapter}</span>
+            <span className="font-medium text-foreground">{concept.name}</span>
         </div>
         <div className="flex items-center gap-4">
             <Badge variant="outline" className={`font-semibold ${getStatusStyles(concept.status)}`}>{concept.status}</Badge>
