@@ -39,14 +39,12 @@ const startConversationFlow = ai.defineFlow(
     inputSchema: StartConversationInputSchema,
     outputSchema: StartConversationOutputSchema,
   },
-  async ({ conceptName }) => {
+  async (input) => {
     
     const llmResponse = await ai.generate({
         prompt: prompt,
         model: 'googleai/gemini-2.5-flash',
-        input: {
-            conceptName
-        }
+        input: input
     });
 
     const questionText = llmResponse.text;
