@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -129,7 +130,7 @@ export default function ConceptPage() {
     
     recognition.onend = () => {
         if (sessionState === 'recording') {
-            // Restart if ended prematurely
+            // Restart if ended prematurely unless we are processing the next step
             recognition.start();
         }
     };
@@ -149,25 +150,27 @@ export default function ConceptPage() {
     if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
     }
-    if (!isCleanup && sessionState !== 'submitting') {
+    if (!isCleanup && sessionState !== 'submitting' && sessionState !== 'processing') {
         setSessionState('idle');
     }
   };
 
   const handleTranscript = (transcript: string) => {
-    setFullTranscript(prev => prev ? `${prev}\n\n${transcript}`: transcript);
     
     if (questionCount < 2) {
+        setFullTranscript(prev => prev ? `${prev}\n\n${transcript}`: transcript);
         handleContinueConversation(transcript);
     } else {
-        endConversation(transcript);
+        const finalTranscript = fullTranscript ? `${fullTranscript}\n\n${transcript}`: transcript;
+        setFullTranscript(finalTranscript);
+        endConversation(finalTranscript);
     }
   };
   
   const handleContinueConversation = async (answer: string) => {
     if (!conceptData) return;
     setSessionState('processing');
-    stopRecording();
+    stopRecording(); // Stop current recording before fetching next question
     try {
         const { audioDataUri, aiResponseText } = await continueConversation({
             conceptName: conceptData.name,
@@ -175,20 +178,20 @@ export default function ConceptPage() {
         });
         setQuestions(prev => [...prev, aiResponseText]);
         setQuestionCount(2);
-        playAudio(audioDataUri, startRecording);
+        playAudio(audioDataUri, startRecording); // Start recording automatically after AI speaks
     } catch(e) {
         setError('There was an error continuing the conversation.');
         setSessionState('error');
     }
   };
 
-  const endConversation = async (finalAnswer?: string) => {
+  const endConversation = async (finalTranscript?: string) => {
     stopRecording();
     setSessionState('submitting');
     
-    const combinedTranscript = finalAnswer ? `${fullTranscript}\n\n${finalAnswer}` : fullTranscript;
+    const transcriptToSubmit = finalTranscript || fullTranscript;
 
-    if (!conceptData || !combinedTranscript) {
+    if (!conceptData || !transcriptToSubmit) {
       setError('Could not submit because no answers were recorded.');
       setSessionState('error');
       return;
@@ -196,8 +199,7 @@ export default function ConceptPage() {
     
     try {
       // Split the transcript into answers based on our knowledge of the flow.
-      // This is a simplification; a more robust solution might use special markers.
-      const answers = combinedTranscript.split('\n\n');
+      const answers = transcriptToSubmit.split('\n\n');
 
       await evaluateConcept({
         studentId: 'S123',
@@ -274,7 +276,7 @@ export default function ConceptPage() {
             return (
                  <div className="flex flex-col items-center text-center">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground mt-2">Processing...</p>
+                    <p className="text-muted-foreground mt-2">Listening...</p>
                 </div>
               );
         case 'submitting':
@@ -345,3 +347,5 @@ export default function ConceptPage() {
     </div>
   );
 }
+
+    
