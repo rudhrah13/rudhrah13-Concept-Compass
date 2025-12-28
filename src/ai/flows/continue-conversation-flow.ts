@@ -25,7 +25,7 @@ You will be given the concept and the student's first answer.
 
 Your task is to:
 1.  Provide a brief, one-sentence acknowledgment of their answer. (e.g., "Okay, I see.", "Got it, thanks for sharing that.")
-2.  Immediately ask a relevant follow-up question to probe their understanding further. This should be the second of two questions total.
+2.  Immediately ask a relevant follow-up question to probe their understanding further. This should be the second of two questions total, so end your response after this question.
 
 Example:
 Concept: Photosynthesis
@@ -37,7 +37,7 @@ Concept: {{{conceptName}}}
 Student's First Answer: {{{firstAnswer}}}
 ---
 
-Your spoken response (acknowledgment + follow-up question):`;
+Your spoken response (acknowledgment + one follow-up question):`;
 
 const continueConversationFlow = ai.defineFlow(
   {

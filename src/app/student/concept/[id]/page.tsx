@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, Mic, Pause, Square, AlertTriangle, RefreshCw } from
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from '@/components/ui/label';
 import type { Concept } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { evaluateConcept } from '@/ai/flows/evaluate-concept';
@@ -37,11 +38,9 @@ export default function ConceptPage() {
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Store transcripts for final submission
-  const [firstAnswer, setFirstAnswer] = useState('');
-  const [secondAnswer, setSecondAnswer] = useState('');
+  const [fullTranscript, setFullTranscript] = useState('');
   const [questions, setQuestions] = useState<string[]>([]);
-  
-  const [isFirstQuestion, setIsFirstQuestion] = useState(true);
+  const [questionCount, setQuestionCount] = useState(0);
 
   useEffect(() => {
     setConceptData(mockConcept);
@@ -86,6 +85,7 @@ export default function ConceptPage() {
     try {
       const { audioDataUri, questionText } = await startConversation({ conceptName: conceptData.name });
       setQuestions([questionText]);
+      setQuestionCount(1);
       playAudio(audioDataUri, startRecording);
     } catch (e) {
       setError('Could not start the conversation. Please try again.');
@@ -94,13 +94,11 @@ export default function ConceptPage() {
   };
 
   const startRecording = () => {
-    if (sessionState === 'recording') return;
+    if (sessionState === 'recording' || !window.SpeechRecognition && !window.webkitSpeechRecognition) return;
 
     setSessionState('recording');
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    
     recognitionRef.current = new SpeechRecognition();
     const recognition = recognitionRef.current;
 
@@ -126,10 +124,14 @@ export default function ConceptPage() {
         setSessionState('error');
         setError(`Speech recognition error: ${event.error}`);
       }
+      stopRecording();
     };
     
     recognition.onend = () => {
-        // The conversation flow will restart it if needed.
+        if (sessionState === 'recording') {
+            // Restart if ended prematurely
+            recognition.start();
+        }
     };
 
     recognition.start();
@@ -147,36 +149,32 @@ export default function ConceptPage() {
     if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
     }
-    if (!isCleanup) {
+    if (!isCleanup && sessionState !== 'submitting') {
         setSessionState('idle');
     }
   };
 
   const handleTranscript = (transcript: string) => {
-    stopRecording(); // Stop listening while processing
-    setSessionState('processing');
-
-    if (isFirstQuestion) {
-        setFirstAnswer(transcript);
-        setIsFirstQuestion(false);
+    setFullTranscript(prev => prev ? `${prev}\n\n${transcript}`: transcript);
+    
+    if (questionCount < 2) {
         handleContinueConversation(transcript);
     } else {
-        setSecondAnswer(transcript);
-        // This was the second answer, end the conversation.
-        // We need to use the state from the moment of calling, so we pass it directly
         endConversation(transcript);
     }
   };
   
   const handleContinueConversation = async (answer: string) => {
     if (!conceptData) return;
+    setSessionState('processing');
+    stopRecording();
     try {
         const { audioDataUri, aiResponseText } = await continueConversation({
             conceptName: conceptData.name,
             firstAnswer: answer,
         });
         setQuestions(prev => [...prev, aiResponseText]);
-        // Ask the second question, then start recording again
+        setQuestionCount(2);
         playAudio(audioDataUri, startRecording);
     } catch(e) {
         setError('There was an error continuing the conversation.');
@@ -188,20 +186,24 @@ export default function ConceptPage() {
     stopRecording();
     setSessionState('submitting');
     
-    const finalSecondAnswer = finalAnswer || secondAnswer;
+    const combinedTranscript = finalAnswer ? `${fullTranscript}\n\n${finalAnswer}` : fullTranscript;
 
-    if (!conceptData || !firstAnswer || !finalSecondAnswer) {
-      setError('Could not submit because one of the answers was missing.');
+    if (!conceptData || !combinedTranscript) {
+      setError('Could not submit because no answers were recorded.');
       setSessionState('error');
       return;
     }
     
     try {
+      // Split the transcript into answers based on our knowledge of the flow.
+      // This is a simplification; a more robust solution might use special markers.
+      const answers = combinedTranscript.split('\n\n');
+
       await evaluateConcept({
         studentId: 'S123',
         conceptId: id,
-        questions: questions,
-        answers: [firstAnswer, finalSecondAnswer]
+        questions: questions.slice(0, answers.length), // Match questions to answers
+        answers: answers
       });
       router.push(`/student/feedback/${id}`);
     } catch (e) {
@@ -240,18 +242,17 @@ export default function ConceptPage() {
   const handleTryAgain = () => {
     setError(null);
     setSessionState('idle');
-    setFirstAnswer('');
-    setSecondAnswer('');
+    setFullTranscript('');
     setQuestions([]);
-    setIsFirstQuestion(true);
+    setQuestionCount(0);
   };
   
   const renderControls = () => {
     switch(sessionState) {
         case 'idle':
             return (
-                <Button onClick={startSession} size="lg" className="rounded-full w-28 h-28 flex flex-col items-center">
-                    <Mic className="h-10 w-10 mb-1" />
+                <Button onClick={startSession} size="lg" className="rounded-full w-32 h-32 flex flex-col items-center">
+                    <Mic className="h-12 w-12 mb-1" />
                     Start Speaking
                 </Button>
             );
@@ -259,12 +260,12 @@ export default function ConceptPage() {
         case 'paused':
             return (
                 <div className="flex items-center justify-center space-x-4">
-                    <Button onClick={togglePause} variant="outline" size="lg" className="rounded-full w-24 h-24 flex flex-col items-center">
-                        {sessionState === 'recording' ? <Pause className="h-8 w-8 mb-1" /> : <Mic className="h-8 w-8 mb-1" />}
+                    <Button onClick={togglePause} variant="outline" size="lg" className="rounded-full w-28 h-28 flex flex-col items-center">
+                        {sessionState === 'recording' ? <Pause className="h-10 w-10 mb-1" /> : <Mic className="h-10 w-10 mb-1" />}
                         {sessionState === 'recording' ? 'Pause' : 'Resume'}
                     </Button>
-                    <Button onClick={() => endConversation()} variant="destructive" size="lg" className="rounded-full w-24 h-24 flex flex-col items-center">
-                        <Square className="h-8 w-8 mb-1" />
+                    <Button onClick={() => endConversation()} variant="destructive" size="lg" className="rounded-full w-28 h-28 flex flex-col items-center">
+                        <Square className="h-10 w-10 mb-1" />
                         End
                     </Button>
                 </div>

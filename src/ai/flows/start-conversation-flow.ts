@@ -20,7 +20,7 @@ export async function startConversation(input: z.infer<typeof StartConversationI
 
 const prompt = `You are a friendly and encouraging AI assistant for students.
 Your goal is to have a short, natural conversation to understand what a student knows about a concept.
-You will be given the concept name. Your task is to generate the first, open-ended question to kick off the conversation.
+You will be given the concept name. Your task is to generate ONLY the first, open-ended question to kick off the conversation.
 
 Example:
 Concept: Photosynthesis
