@@ -1,15 +1,15 @@
+// page.tsx
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Mic, Pause, Square, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Label } from '@/components/ui/label';
-import type { Concept } from '@/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { startTeachingCall, vapi } from '@/lib/vapi';
+import type { Concept, StudentAttempt } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { evaluateConcept } from '@/ai/flows/evaluate-concept';
 import { startConversation } from '@/ai/flows/start-conversation-flow';
@@ -18,10 +18,22 @@ import { continueConversation } from '@/ai/flows/continue-conversation-flow';
 const mockConcept: Concept = {
   id: 'sci1',
   name: 'Photosynthesis',
-  status: 'Not Started',
+  status: 'In Progress',
+  questions: [
+    'Explain photosynthesis in your own words.',
+    'What happens if sunlight is not available?',
+  ],
 };
 
-type SessionState = 'idle' | 'recording' | 'paused' | 'processing' | 'waitingForAI' | 'submitting' | 'denied' | 'error';
+
+// #####################################
+
+// #Add it in your env.local
+// NEXT_PUBLIC_VAPI_PUBLIC_KEY=681788e3-c222-489d-8cbb-e8fe9756ef29
+// NEXT_PUBLIC_VAPI_ASSISTANT_ID=9ccfdd2e-b58e-40c5-b518-c5965fec5944
+  
+// ######################################
+
 
 export default function ConceptPage() {
   const params = useParams();
@@ -30,18 +42,7 @@ export default function ConceptPage() {
   const router = useRouter();
   
   const [conceptData, setConceptData] = useState<Concept | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  
-  const [sessionState, setSessionState] = useState<SessionState>('idle');
-  
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Store transcripts for final submission
-  const [fullTranscript, setFullTranscript] = useState('');
-  const [questions, setQuestions] = useState<string[]>([]);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
 
   useEffect(() => {
     setConceptData(mockConcept);
@@ -62,21 +63,38 @@ export default function ConceptPage() {
     };
   }, [id]);
 
-  const playAudio = (src: string, onEnded: () => void) => {
-    if (audioRef.current) {
-      audioRef.current.src = src;
-      audioRef.current.oncanplaythrough = () => {
-        audioRef.current?.play().catch(e => {
-            setError('There was an error playing the audio.');
-            onEnded();
-        });
-      };
-      audioRef.current.onended = onEnded;
-      audioRef.current.onerror = () => {
-        setError('There was an error playing the audio.');
-        onEnded();
-      };
-    }
+  useEffect(() => {
+    vapi.on("call-start", () => {
+      console.log("Call started");
+      setStatus("connected");
+    });
+
+    vapi.on("call-end", () => {
+      console.log("Call ended");
+      setStatus("ended");
+    });
+
+    vapi.on("message", (message) => {
+      if (message.type === "transcript") {
+        console.log(`${message.role}: ${message.transcript}`);
+      }
+    });
+
+    vapi.on("error", (error) => {
+      console.error("Vapi error:", error);
+      setStatus("error");
+    });
+
+    return () => {
+      vapi.stop();
+      vapi.removeAllListeners();
+    };
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // In a real app, you would save the answers here
+    router.push(`/student/feedback/${id}`);
   };
 
   const startSession = async () => {
@@ -93,127 +111,28 @@ export default function ConceptPage() {
     }
   };
 
-  const startRecording = () => {
-    if (sessionState === 'recording' || !window.SpeechRecognition && !window.webkitSpeechRecognition) return;
-
-    setSessionState('recording');
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    const recognition = recognitionRef.current;
-
-    recognition.lang = 'en-US';
-    recognition.continuous = true;
-    recognition.interimResults = false;
-
-    recognition.onresult = (event) => {
-      resetSilenceTimeout();
-      const lastResult = event.results[event.results.length - 1];
-      if (lastResult.isFinal) {
-        const transcript = lastResult[0].transcript.trim();
-        if(transcript) {
-            handleTranscript(transcript);
-        }
-      }
-    };
-
-    recognition.onerror = (event) => {
-      if (event.error === 'not-allowed') {
-        setSessionState('denied');
-      } else {
-        setSessionState('error');
-        setError(`Speech recognition error: ${event.error}`);
-      }
-      stopRecording();
-    };
-    
-    recognition.onend = () => {
-        if (sessionState === 'recording') {
-            // Restart if ended prematurely unless we are processing the next step
-            recognition.start();
-        }
-    };
-
-    recognition.start();
-    resetSilenceTimeout();
-  };
-
-  const stopRecording = (isCleanup = false) => {
-    if (recognitionRef.current) {
-      recognitionRef.current.onresult = null;
-      recognitionRef.current.onend = null;
-      recognitionRef.current.onerror = null;
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-    }
-    if (isCleanup) {
-        setSessionState('idle');
-    }
-  };
-
-  const handleTranscript = (transcript: string) => {
-    stopRecording();
-    if (answers.length < 1) {
-        setAnswers([transcript]);
-        handleContinueConversation(transcript);
-    } else {
-        setAnswers(prev => [...prev, transcript]);
-        endConversation([...answers, transcript]);
-    }
-  };
-  
-  const handleContinueConversation = async (firstAnswer: string) => {
-    if (!conceptData) return;
-    setSessionState('waitingForAI'); 
+  const startCall = async () => {
     try {
-        const { audioDataUri, aiResponseText } = await continueConversation({
-            conceptName: conceptData.name,
-            firstAnswer: firstAnswer,
-        });
-        setQuestions(prev => [...prev, aiResponseText]);
-        playAudio(audioDataUri, startRecording); 
-    } catch(e) {
-        setError('There was an error continuing the conversation.');
-        setSessionState('error');
+      const studentName = localStorage.getItem('studentName') || 'Student';
+      const topic = conceptData?.name || 'the concept';
+      
+      await startTeachingCall(studentName, topic);
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
     }
   };
 
-  const endConversation = async (finalAnswers?: string[]) => {
-    stopRecording();
-    setSessionState('submitting');
-    
-    const answersToSubmit = finalAnswers || answers;
-
-    if (!conceptData || answersToSubmit.length === 0) {
-      setError('Could not submit because no answers were recorded.');
-      setSessionState('error');
-      return;
-    }
-    
+  const endCall = async () => {
     try {
-      await evaluateConcept({
-        studentId: 'S123',
-        conceptId: id,
-        questions: questions.slice(0, answersToSubmit.length),
-        answers: answersToSubmit,
-      });
-      router.push(`/student/feedback/${id}`);
-    } catch (e) {
-      setError('There was an error submitting your answers. Please try again.');
-      setSessionState('error');
+      await vapi.stop();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const togglePause = () => {
-    if (sessionState === 'recording') {
-        stopRecording();
-        setSessionState('paused');
-    } else if (sessionState === 'paused') {
-        startRecording();
-    }
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept...</div>;
   }
 
   const resetSilenceTimeout = () => {
@@ -301,36 +220,23 @@ export default function ConceptPage() {
         <Link href="/student/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Concepts</Link>
       </Button>
 
-      <header className="mb-8 text-center">
+      <header className="mb-8">
         <p className="text-lg font-semibold text-primary">{conceptData.name}</p>
-        <h1 className="text-3xl font-bold">Speak freely. There are no right or wrong answers.</h1>
-        <p className="text-muted-foreground">Just explain what you understand. The app is only listening.</p>
+        <h1 className="text-3xl font-bold">Explain the idea in your own words.</h1>
+        <p className="text-muted-foreground mt-2">This is not an exam.</p>
       </header>
 
-      <Card className="shadow-lg">
-        <CardContent className="flex flex-col items-center justify-center space-y-6 min-h-[300px] p-6">
-        
-        {sessionState === 'denied' && (
-            <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Microphone Access Denied</AlertTitle>
-            <AlertDescription>
-                Please allow microphone access in your browser settings to continue.
-            </AlertDescription>
-            </Alert>
-        )}
-
-        {error && sessionState === 'error' && (
-            <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Something Went Wrong</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
-        
-        <div className="flex items-center justify-center pt-4">
-            {renderControls()}
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Vapi Voice Assistant</CardTitle>
+          <CardDescription>Interact with the AI assistant to understand the concept.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p>Status: <strong>{status}</strong></p>
+          <div className="flex gap-4">
+            <Button onClick={startCall} disabled={status === "connected"}>Start Call</Button>
+            <Button onClick={endCall} disabled={status !== "connected"} variant="outline">End Call</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

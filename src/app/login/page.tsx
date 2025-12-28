@@ -15,7 +15,13 @@ export default function LoginPage() {
 
   const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const studentId = formData.get('studentId') as string;
+    const studentName = formData.get('studentName') as string;
+    
     localStorage.setItem('role', 'student');
+    localStorage.setItem('studentId', studentId);
+    localStorage.setItem('studentName', studentName);
     router.push('/student/dashboard');
   };
 
@@ -49,8 +55,12 @@ export default function LoginPage() {
                 <TabsContent value="student">
                   <form onSubmit={handleStudentSubmit} className="space-y-4 pt-4">
                     <div className="space-y-2">
+                      <Label htmlFor="studentName">Student Name</Label>
+                      <Input id="studentName" name="studentName" placeholder="e.g., John Doe" required />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="studentId">Student ID / Roll Number</Label>
-                      <Input id="studentId" placeholder="e.g., S101" required />
+                      <Input id="studentId" name="studentId" placeholder="e.g., S101" required />
                     </div>
                     <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In as Student</Button>
                   </form>
