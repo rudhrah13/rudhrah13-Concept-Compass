@@ -101,7 +101,7 @@ export interface StudentProfile {
 }
 
 
-// Zod Schemas for API validation
+// Zod Schemas for Genkit Flows
 
 export const EvaluateConceptInputSchema = z.object({
   studentId: z.string(),
@@ -203,14 +203,14 @@ export const GetStudentProfileOutputSchema = z.object({
 export type GetStudentProfileOutput = z.infer<typeof GetStudentProfileOutputSchema>;
 
 
-const GenerateFeedbackInputSchema = z.object({
+export const GenerateFeedbackInputSchema = z.object({
   concept: z.string().describe('The concept the student is being questioned on.'),
   question: z.string().describe('The question the student is answering.'),
   studentAnswer: z.string().describe('The student answer to the question.'),
 });
 export type GenerateFeedbackInput = z.infer<typeof GenerateFeedbackInputSchema>;
 
-const GenerateFeedbackOutputSchema = z.object({
+export const GenerateFeedbackOutputSchema = z.object({
   correctPoints: z.string().describe('What the student got correct.'),
   incorrectPoints: z.string().describe('What the student got incorrect or unclear.'),
   correctlyFramedExplanation: z
@@ -218,3 +218,26 @@ const GenerateFeedbackOutputSchema = z.object({
     .describe('A correctly framed explanation of the concept.'),
 });
 export type GenerateFeedbackOutput = z.infer<typeof GenerateFeedbackOutputSchema>;
+
+export const StartConversationInputSchema = z.object({
+  conceptName: z.string(),
+});
+export type StartConversationInput = z.infer<typeof StartConversationInputSchema>;
+
+export const StartConversationOutputSchema = z.object({
+  audioDataUri: z.string(),
+  questionText: z.string(),
+});
+export type StartConversationOutput = z.infer<typeof StartConversationOutputSchema>;
+
+export const ContinueConversationInputSchema = z.object({
+  conceptName: z.string(),
+  firstAnswer: z.string(),
+});
+export type ContinueConversationInput = z.infer<typeof ContinueConversationInputSchema>;
+
+export const ContinueConversationOutputSchema = z.object({
+  audioDataUri: z.string(),
+  aiResponseText: z.string(),
+});
+export type ContinueConversationOutput = z.infer<typeof ContinueConversationOutputSchema>;
