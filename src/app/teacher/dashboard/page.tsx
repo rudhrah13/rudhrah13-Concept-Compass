@@ -1,3 +1,5 @@
+// page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,6 +13,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ConceptPerformance, Student, UnderstandingLevel } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+
+// Server action to log to terminal
+async function logStudentClick(student: Student) {
+
+  console.log('=== STUDENT CLICKED ===');
+  console.log('ID:', student.id);
+  console.log('Name:', student.name);
+  console.log('Roll Number:', student.rollNumber);
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('========================');
+}
 
 
 const dummyConcepts: ConceptPerformance[] = [
@@ -224,17 +237,51 @@ function StudentList() {
                   {students.map((student) => (
                     <TableRow key={student.id} className="group">
                       <TableCell className="font-medium p-0">
-                         <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
+                         <Link 
+                           href={`/teacher/student/${student.id}`} 
+                           className="flex items-center p-4 h-full"
+                           onClick={() => {
+                             console.log('Clicked on student:', {
+                               id: student.id,
+                               name: student.name,
+                               rollNumber: student.rollNumber
+                             });
+                             // Also log to terminal via server action
+                             logStudentClick(student);
+                           }}
+                         >
                             {student.name}
                         </Link>
                       </TableCell>
                       <TableCell className="p-0">
-                        <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
+                        <Link 
+                          href={`/teacher/student/${student.id}`} 
+                          className="flex items-center p-4 h-full"
+                          onClick={() => {
+                            console.log('Clicked on student:', {
+                              id: student.id,
+                              name: student.name,
+                              rollNumber: student.rollNumber
+                            });
+                            logStudentClick(student);
+                          }}
+                        >
                             {student.rollNumber}
                         </Link>
                       </TableCell>
                        <TableCell className="text-right p-0">
-                        <Link href={`/teacher/student/${student.id}`} className="flex items-center justify-end p-4 h-full">
+                        <Link 
+                          href={`/teacher/student/${student.id}`} 
+                          className="flex items-center justify-end p-4 h-full"
+                          onClick={() => {
+                            console.log('Clicked on student:', {
+                              id: student.id,
+                              name: student.name,
+                              rollNumber: student.rollNumber
+                            });
+                            logStudentClick(student);
+                          }}
+                        >
                           <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                         </Link>
                       </TableCell>
