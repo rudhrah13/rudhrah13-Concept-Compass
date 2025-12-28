@@ -12,8 +12,10 @@ import {
   ChevronRight,
   Lightbulb,
   Loader2,
-  Pencil,
-  Puzzle,
+  Mic,
+  Smile,
+  Meh,
+  Frown,
   Target,
   ThumbsUp,
   User,
@@ -34,14 +36,27 @@ import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/
 const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
         case 'Strong':
-            return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
+            return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Strong</Badge>;
         case 'Weak':
-            return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
+            return <Badge variant="destructive" className="bg-red-500/20 text-red-700 hover:bg-red-500/30">Weak</Badge>;
         case 'Partial':
         default:
-            return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
+            return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Partial</Badge>;
     }
 }
+
+const getConfidenceIndicator = (confidence: string | undefined) => {
+    switch (confidence?.toLowerCase()) {
+        case 'high':
+            return <><Smile className="h-4 w-4 text-green-600" /> Speaks confidently</>;
+        case 'medium':
+            return <><Meh className="h-4 w-4 text-yellow-600" /> Sometimes hesitant</>;
+        case 'low':
+            return <><Frown className="h-4 w-4 text-red-600" /> Very hesitant</>;
+        default:
+            return null;
+    }
+};
 
 export default function TeacherStudentOverviewPage() {
     useProtectedRoute('teacher');
@@ -53,6 +68,9 @@ export default function TeacherStudentOverviewPage() {
     useEffect(() => {
         initializeDemoData();
     }, []);
+
+    // Default to the new URL param based view
+    const tab = searchParams.get('tab') || 'profile';
 
     if (conceptId) {
         return <StudentConceptFeedbackView studentId={studentId} conceptId={conceptId} />;
@@ -94,10 +112,17 @@ function StudentProfileView({ studentId }: { studentId: string }) {
             const allConcepts = getConcepts();
 
             const strongConcepts = studentEvaluations.filter(e => e.evaluation.understanding === 'Strong').length;
-            const needsWork = studentEvaluations.filter(e => e.evaluation.understanding !== 'Strong').length;
+            const needsWork = studentEvaluations.length - strongConcepts;
             
-            const gaps = studentEvaluations.map(e => e.evaluation.gap).filter(g => g && g !== 'None');
-            const repeatedIssue = gaps.length > 1 ? 'Multiple areas need attention.' : gaps[0] || 'No specific repeated issues found.';
+            const gapCounts: { [key: string]: number } = {};
+            studentEvaluations.forEach(e => {
+                if (e.evaluation.gap && e.evaluation.gap !== 'None') {
+                    gapCounts[e.evaluation.gap] = (gapCounts[e.evaluation.gap] || 0) + 1;
+                }
+            });
+
+            const sortedGaps = Object.keys(gapCounts).sort((a, b) => gapCounts[b] - gapCounts[a]);
+            const repeatedIssue = sortedGaps.length > 0 ? sortedGaps[0] : 'No specific repeated issues found.';
 
             const profile: StudentProfile = {
                 id: studentData.studentId,
@@ -116,15 +141,17 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                     'Encourage oral explanation for concepts.',
                     'Suggest using shorter, simpler sentences.',
                 ],
-                recentConcepts: studentEvaluations.map(e => {
-                    const concept = allConcepts.find(c => c.conceptId === e.conceptId);
-                    return {
-                        id: e.conceptId,
-                        name: concept?.chapter || 'Unknown Concept',
-                        status: e.evaluation.understanding,
-                        date: new Date(e.date).toLocaleDateString(),
-                    }
-                }).slice(0, 5), // Limit to recent 5
+                recentConcepts: studentEvaluations
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(e => {
+                        const concept = allConcepts.find(c => c.conceptId === e.conceptId);
+                        return {
+                            id: e.conceptId,
+                            name: concept?.chapter || 'Unknown Concept',
+                            status: e.evaluation.understanding,
+                            date: new Date(e.date).toLocaleDateString(),
+                        }
+                    }).slice(0, 5), // Limit to recent 5
             };
             setStudent(profile);
            } catch(e) {
@@ -132,7 +159,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
            } finally {
                 setLoading(false);
            }
-        }, 1000);
+        }, 500);
     };
 
     useEffect(fetchData, [studentId]);
@@ -162,7 +189,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
     return (
         <div className="container mx-auto max-w-4xl py-6 sm:py-8">
             <Button asChild variant="outline" size="sm" className="mb-4">
-                <Link href="/teacher/dashboard?tab=students">
+                <Link href="/teacher/dashboard?tabs=students">
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student List
                 </Link>
             </Button>
@@ -183,16 +210,16 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                         <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />Overall Snapshot</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div className="p-4 bg-background rounded-lg">
+                        <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
                             <p className="text-3xl font-bold text-green-600">{student.snapshot.strongConcepts}</p>
-                            <p className="text-sm text-muted-foreground">Strong Concepts</p>
+                            <p className="text-sm font-medium">Strong Concepts</p>
                         </div>
-                        <div className="p-4 bg-background rounded-lg">
+                        <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                             <p className="text-3xl font-bold text-yellow-600">{student.snapshot.needsWork}</p>
-                            <p className="text-sm text-muted-foreground">Needs Work</p>
+                            <p className="text-sm font-medium">Needs Work</p>
                         </div>
-                        <div className="p-4 bg-background rounded-lg col-span-1 md:col-span-3 text-left">
-                            <p className="font-semibold">Repeated Issue</p>
+                        <div className="p-4 bg-red-500/10 rounded-lg col-span-1 md:col-span-3 text-left border border-red-500/20">
+                            <p className="font-semibold text-red-600">Repeated Issue</p>
                             <p className="text-sm text-muted-foreground">{student.snapshot.repeatedIssue}</p>
                         </div>
                     </CardContent>
@@ -227,7 +254,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                     </CardHeader>
                     <CardContent>
                          <div className="flex flex-col gap-3">
-                            {student.recentConcepts.map(concept => (
+                            {student.recentConcepts.length > 0 ? student.recentConcepts.map(concept => (
                                 <Link key={concept.id} href={`/teacher/student/${studentId}?concept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
                                     <div>
                                         <p className="font-medium">{concept.name}</p>
@@ -239,7 +266,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                                     </div>
 
                                 </Link>
-                            ))}
+                            )) : <p className="text-muted-foreground text-center py-4">No recent attempts found.</p>}
                         </div>
                     </CardContent>
                 </Card>
@@ -250,6 +277,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
 
 function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: string, conceptId: string }) {
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
+  const [evaluation, setEvaluation] = useState<DemoEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -260,8 +288,10 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     setError(null);
     setTimeout(() => {
         try {
-            const evaluation = getEvaluations().find(e => e.studentId === studentId && e.conceptId === conceptId);
-            if (!evaluation) {
+            const evalData = getEvaluations().find(e => e.studentId === studentId && e.conceptId === conceptId);
+            setEvaluation(evalData || null);
+
+            if (!evalData) {
                 setAttempt(null);
                 setLoading(false);
                 return;
@@ -273,11 +303,11 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
                 questions: ['Explain the concept in your own words.'], // Placeholder
                 studentAnswers: ['Student answer was recorded via voice.'], // Placeholder
                 feedback: {
-                    understandingLevel: evaluation.evaluation.understanding,
-                    strength: evaluation.evaluation.strength,
-                    gap: evaluation.evaluation.gap,
+                    understandingLevel: evalData.evaluation.understanding,
+                    strength: evalData.evaluation.strength,
+                    gap: evalData.evaluation.gap,
                     languageFeedback: {
-                        clarity: evaluation.evaluation.language.clarity,
+                        clarity: evalData.evaluation.language.clarity,
                     },
                     correctExplanation: 'A correct explanation of the concept involves understanding its core principles and applications.'
                 }
@@ -289,7 +319,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         } finally {
             setLoading(false);
         }
-    }, 1000);
+    }, 500);
   };
   useEffect(fetchData, [studentId, conceptId]);
   
@@ -335,7 +365,6 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
   }
 
   const summary = getUnderstandingSummary(attempt.feedback.understandingLevel);
-  const showLanguageFeedback = featureFlags.ENABLE_LANGUAGE_FEEDBACK && attempt.feedback.languageFeedback;
 
   return (
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
@@ -367,17 +396,15 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         <Card>
             <CardHeader>
                 <CardTitle>Student's Submission</CardTitle>
-                <CardDescription>The questions asked and the answers provided by the student for this concept.</CardDescription>
+                 <CardDescription className="flex items-center gap-2 pt-2">
+                    <Mic className="h-4 w-4" />
+                    {getConfidenceIndicator(evaluation?.evaluation.language.confidence)}
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {attempt.questions.map((question, index) => (
-                    <div key={index}>
-                        <p className="font-semibold text-primary">{question}</p>
-                        <blockquote className="mt-2 border-l-2 pl-4 italic text-muted-foreground">
-                            {attempt.studentAnswers[index]}
-                        </blockquote>
-                    </div>
-                ))}
+                 <blockquote className="mt-2 border-l-2 pl-4 italic text-muted-foreground">
+                    Student answer was recorded via voice. Transcript not shown.
+                </blockquote>
             </CardContent>
         </Card>
 
@@ -431,26 +458,6 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
             </Card>
           )}
         </div>
-
-        {showLanguageFeedback && (attempt.feedback.languageFeedback?.clarity) && (
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-base font-semibold">
-                Expression Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0 text-sm text-muted-foreground">
-              {attempt.feedback.languageFeedback.clarity && (
-                <div className="flex items-start gap-3">
-                  <Puzzle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    Sentence clarity: {attempt.feedback.languageFeedback.clarity}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1" className="border-b-0">

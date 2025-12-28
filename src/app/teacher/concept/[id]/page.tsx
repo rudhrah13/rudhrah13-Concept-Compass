@@ -19,12 +19,12 @@ import { getConcepts, getEvaluations, getStudents, initializeDemoData } from '@/
 const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
         case 'Strong':
-            return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
+            return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Strong</Badge>;
         case 'Weak':
-            return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
+            return <Badge variant="destructive" className="bg-red-500/20 text-red-700 hover:bg-red-500/30">Weak</Badge>;
         case 'Partial':
         default:
-            return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
+            return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Partial</Badge>;
     }
 }
 
@@ -54,8 +54,15 @@ export default function ConceptOverviewPage() {
         const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === id);
         const allStudents: DemoStudent[] = getStudents();
 
-        const totalEvals = evaluationsForConcept.length;
+        const gapCounts: { [key: string]: number } = {};
+        evaluationsForConcept.forEach(e => {
+            if (e.evaluation.gap && e.evaluation.gap !== 'None') {
+                gapCounts[e.evaluation.gap] = (gapCounts[e.evaluation.gap] || 0) + 1;
+            }
+        });
 
+        const sortedGaps = Object.keys(gapCounts).sort((a, b) => gapCounts[b] - gapCounts[a]);
+        
         const overview: ConceptOverview = {
             id: conceptData.conceptId,
             name: conceptData.chapter,
@@ -64,7 +71,7 @@ export default function ConceptOverviewPage() {
                 partial: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Partial').length,
                 weak: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Weak').length,
             },
-            keyGaps: [...new Set(evaluationsForConcept.map(e => e.evaluation.gap).filter(g => g && g !== 'None'))],
+            keyGaps: sortedGaps.slice(0, 3), // Show top 3 common gaps
             suggestedActions: [ // This can be made dynamic later
                 'Re-explain the process using a visual diagram on the board.',
                 'Ask students to explain the concept aloud to a partner.',
@@ -88,7 +95,7 @@ export default function ConceptOverviewPage() {
       } finally {
         setLoading(false);
       }
-    }, 1000);
+    }, 500); // Reduced delay
   };
 
   useEffect(() => {
@@ -148,6 +155,7 @@ export default function ConceptOverviewPage() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Understanding Distribution</CardTitle>
+                <CardDescription>Counts of student understanding levels for this concept.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-3">
@@ -161,7 +169,7 @@ export default function ConceptOverviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Key Gaps Identified</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Most common confusions</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {concept.keyGaps.length > 0 ? (

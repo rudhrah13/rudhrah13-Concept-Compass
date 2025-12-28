@@ -74,8 +74,7 @@ function ConceptList() {
             try {
                 const allConcepts: DemoConcept[] = getConcepts();
                 const allEvaluations: DemoEvaluation[] = getEvaluations();
-                const allStudents: DemoStudent[] = getStudents();
-
+                
                 const performanceData = allConcepts.map(concept => {
                     const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === concept.conceptId);
                     const totalEvals = evaluationsForConcept.length;
@@ -99,23 +98,25 @@ function ConceptList() {
             } finally {
                 setLoading(false);
             }
-        }, 1000);
+        }, 500); // Reduced delay
     };
 
     useEffect(fetchData, []);
 
     const getUnderstandingText = (concept: ConceptPerformance) => {
         const { strong, partial, weak } = concept.understanding;
-        if (strong > 65) return `${Math.round(strong)}% Strong`;
+        if (strong >= 65) return `${Math.round(strong)}% Strong`;
         if (weak > 30) return `${Math.round(weak)}% Weak`;
-        return `${Math.round(partial)}% Partial`;
+        if (strong + partial + weak === 0) return 'Not Attempted';
+        return `${Math.round(partial + weak)}% Needs Work`;
     }
 
     const getUnderstandingBadgeForConcept = (concept: ConceptPerformance) => {
-        const { strong, weak } = concept.understanding;
-        if (strong > 65) return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
-        if (weak > 30) return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
-        return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
+        const { strong, weak, partial } = concept.understanding;
+        if (strong + partial + weak === 0) return <Badge variant="outline">Not Attempted</Badge>;
+        if (strong >= 65) return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Strong</Badge>;
+        if (weak > 30) return <Badge variant="destructive" className="bg-red-500/20 text-red-700 hover:bg-red-500/30">Weak</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Partial</Badge>;
     }
 
     const renderContent = () => {
@@ -131,7 +132,7 @@ function ConceptList() {
             );
         }
         if (concepts.length === 0) {
-            return <div className="text-center p-10 text-muted-foreground">No concepts have been attempted yet.</div>;
+            return <div className="text-center p-10 text-muted-foreground">No concepts found.</div>;
         }
         return (
             <Table>
@@ -205,7 +206,7 @@ function StudentList() {
             } finally {
                 setLoading(false);
             }
-        }, 1000);
+        }, 500); // Reduced delay
     };
 
     useEffect(fetchData, []);
