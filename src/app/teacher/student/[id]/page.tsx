@@ -76,8 +76,8 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
     const fromConcept = fromConceptId ? getConcepts().find(c => c.conceptId === fromConceptId) : null;
     const fromConceptEvaluation = fromConceptId ? getEvaluations().find(e => e.studentId === studentId && e.conceptId === fromConceptId) : null;
 
-    const backUrl = fromConceptId ? `/teacher/concept/${fromConceptId}` : '/teacher/dashboard?tabs=students';
-    const backText = fromConceptId ? 'Back to Concept Overview' : 'Back to Student List';
+    const backUrl = fromConceptId ? `/teacher/concept/${fromConceptId}` : '/teacher/dashboard';
+    const backText = fromConceptId ? 'Back to Concept Overview' : 'Back to Dashboard';
 
     const fetchData = () => {
         setLoading(true);
@@ -402,31 +402,27 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
             </CardHeader>
             <CardContent className="space-y-4">
                 {evaluation.conversation.questionsAsked.map((q, index) => (
-                   <div key={index} className="space-y-2">
+                   <div key={index} className="rounded-lg border bg-background p-4 space-y-4">
                         {/* Question Block */}
-                        <div className="rounded-lg bg-muted p-4 border">
-                            <div className="flex items-start gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
-                                    T
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-semibold text-muted-foreground">Asked</p>
-                                    <p className="text-sm">{q.questionText}</p>
-                                </div>
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
+                                T
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs font-semibold text-muted-foreground">Asked</p>
+                                <p className="text-sm">{q.questionText}</p>
                             </div>
                         </div>
                         {/* Answer Block */}
-                        <div className="ml-4 md:ml-10 rounded-lg bg-blue-50 p-4 border border-blue-100">
-                             <div className="flex items-start gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
-                                    S
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-xs font-semibold text-blue-800">Student said</p>
-                                    <blockquote className="text-sm italic text-blue-900">
-                                        "{evaluation.conversation.studentResponses[index]}"
-                                    </blockquote>
-                                </div>
+                        <div className="flex items-start gap-3 ml-4 md:ml-10">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
+                                S
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs font-semibold text-blue-800">Student said</p>
+                                <blockquote className="text-sm italic text-blue-900">
+                                    "{evaluation.conversation.studentResponses[index]}"
+                                </blockquote>
                             </div>
                         </div>
                    </div>
