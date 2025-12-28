@@ -1,20 +1,22 @@
+// page.tsx
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import type { Concept, ConceptAttempt } from '@/types';
+import { startTeachingCall, vapi } from '@/lib/vapi';
+import type { Concept, StudentAttempt } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 
 // Mock data, in a real app this would come from an API
 const mockConcept: Concept = {
   id: 'sci1',
-  title: 'Photosynthesis',
+  name: 'Photosynthesis',
+  status: 'In Progress',
   questions: [
     'Explain photosynthesis in your own words.',
     'What happens if sunlight is not available?',
@@ -29,6 +31,7 @@ export default function ConceptPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [conceptData, setConceptData] = useState<Concept | null>(null);
+  const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
 
   useEffect(() => {
     // Simulate API call
@@ -38,6 +41,34 @@ export default function ConceptPage() {
       setLoading(false);
     }, 500);
   }, [id]);
+
+  useEffect(() => {
+    vapi.on("call-start", () => {
+      console.log("Call started");
+      setStatus("connected");
+    });
+
+    vapi.on("call-end", () => {
+      console.log("Call ended");
+      setStatus("ended");
+    });
+
+    vapi.on("message", (message) => {
+      if (message.type === "transcript") {
+        console.log(`${message.role}: ${message.transcript}`);
+      }
+    });
+
+    vapi.on("error", (error) => {
+      console.error("Vapi error:", error);
+      setStatus("error");
+    });
+
+    return () => {
+      vapi.stop();
+      vapi.removeAllListeners();
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -53,6 +84,26 @@ export default function ConceptPage() {
       setConceptData(mockConcept);
       setLoading(false);
     }, 500);
+  };
+
+  const startCall = async () => {
+    try {
+      const studentName = localStorage.getItem('studentName') || 'Student';
+      const topic = conceptData?.name || 'the concept';
+      
+      await startTeachingCall(studentName, topic);
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+    }
+  };
+
+  const endCall = async () => {
+    try {
+      await vapi.stop();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   if (loading) {
@@ -84,32 +135,22 @@ export default function ConceptPage() {
       </Button>
 
       <header className="mb-8">
-        <p className="text-lg font-semibold text-primary">{conceptData.title}</p>
+        <p className="text-lg font-semibold text-primary">{conceptData.name}</p>
         <h1 className="text-3xl font-bold">Explain the idea in your own words.</h1>
         <p className="text-muted-foreground mt-2">This is not an exam.</p>
       </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>Guided Questions</CardTitle>
-          <CardDescription>Answer the questions below to the best of your ability.</CardDescription>
+          <CardTitle>Vapi Voice Assistant</CardTitle>
+          <CardDescription>Interact with the AI assistant to understand the concept.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {conceptData.questions.map((q, index) => (
-              <div key={index} className="space-y-2">
-                <Label htmlFor={`question-${index}`} className="text-base font-medium">{q}</Label>
-                <Textarea
-                  id={`question-${index}`}
-                  placeholder="Type your answer here..."
-                  rows={5}
-                  className="bg-background"
-                  required
-                />
-              </div>
-            ))}
-            <Button type="submit" className="w-full" size="lg">Submit Answers</Button>
-          </form>
+        <CardContent className="space-y-4">
+          <p>Status: <strong>{status}</strong></p>
+          <div className="flex gap-4">
+            <Button onClick={startCall} disabled={status === "connected"}>Start Call</Button>
+            <Button onClick={endCall} disabled={status !== "connected"} variant="outline">End Call</Button>
+          </div>
         </CardContent>
       </Card>
     </div>
