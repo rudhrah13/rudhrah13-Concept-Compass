@@ -230,7 +230,7 @@ function StudentList() {
                     rollNumber: s.studentId,
                 }));
                 setStudents(transformedStudents);
-            } catch (e) => {
+            } catch (e) {
                 setError("Failed to load students.");
             } finally {
                 setLoading(false);
