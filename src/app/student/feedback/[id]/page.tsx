@@ -11,7 +11,8 @@ import {
   Loader2,
   X,
   AlertTriangle,
-  MessageSquare
+  MessageSquare,
+  Mic
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -139,7 +140,7 @@ export default function FeedbackPage() {
                                 AI
                             </div>
                             <div className="flex-1">
-                                <p className="text-xs font-semibold text-muted-foreground">The AI asked</p>
+                                <p className="text-xs font-semibold text-muted-foreground">AI asked</p>
                                 <p className="text-sm">{q.questionText}</p>
                             </div>
                         </div>
@@ -189,7 +190,7 @@ export default function FeedbackPage() {
               </CardHeader>
               <CardContent className="p-3 pt-0 text-green-900">
                 <p>
-                  {evaluation.evaluation.strength}
+                  {evaluation.evaluation.strength.replace('Student', 'You')}
                 </p>
               </CardContent>
             </Card>
@@ -204,12 +205,18 @@ export default function FeedbackPage() {
               </CardHeader>
               <CardContent className="p-3 pt-0 text-yellow-900">
                 <p>
-                  {evaluation.evaluation.gap}
+                  {evaluation.evaluation.gap.replace('Student', 'You')}
                 </p>
               </CardContent>
             </Card>
           )}
         </div>
+        
+        <div className='flex items-center gap-2 pt-2 text-sm text-muted-foreground'>
+            <Mic className="h-4 w-4" />
+            <p>Confidence: <span className='font-semibold'>{evaluation.evaluation.language.confidence}</span></p>
+        </div>
+
 
         {/* Section 3: Correct Explanation */}
         <Accordion type="single" collapsible>
