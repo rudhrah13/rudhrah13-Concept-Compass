@@ -7,7 +7,7 @@ export default function AdminDashboard() {
   return (
     <div className="container py-10">
       <Button asChild variant="outline" className="mb-4">
-        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
+        <Link href="/login"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Login</Link>
       </Button>
       <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
        <Card>

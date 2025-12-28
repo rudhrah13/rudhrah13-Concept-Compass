@@ -139,7 +139,7 @@ export default function StudentDashboard() {
   return (
     <div className="container mx-auto py-8">
        <Button asChild variant="outline" className="mb-4">
-        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
+        <Link href="/login"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Login</Link>
       </Button>
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-primary">Select what you are working on today</h1>
