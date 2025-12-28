@@ -1,15 +1,15 @@
 
 'use client';
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, Check, ThumbsUp, AlertTriangle, Lightbulb, BookOpen, Pencil, Puzzle, X, Sparkles, BrainCircuit } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, ThumbsUp, AlertTriangle, Lightbulb, BookOpen, Pencil, X, BrainCircuit, Puzzle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { startTeachingCall, vapi, waitForOutput } from '@/lib/vapi';
-import type { Concept, StudentAttempt, DemoConcept } from '@/types';
+import type { DemoConcept } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { initializeDemoData, getConcepts } from '@/lib/demo-data';
 
@@ -52,7 +52,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Good Job Section */}
+        {/* What you did well */}
         {feedback.goodJob && (
           <Card className="border-green-200 bg-green-50/50">
             <CardHeader>
@@ -74,7 +74,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
           </Card>
         )}
 
-        {/* Areas to Improve Section */}
+        {/* What needs improvement */}
         {feedback.fixThis && (
            <Card className="border-orange-200 bg-orange-50/50">
            <CardHeader>
@@ -97,7 +97,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
         )}
       </div>
 
-      {/* Clear Explanation */}
+      {/* Simple explanation */}
       {feedback.clearExplanation && (
         <Card>
           <CardHeader>
@@ -112,7 +112,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
         </Card>
       )}
       
-       {/* Expression Tips */}
+       {/* How to explain better */}
       {feedback.expressionTips && feedback.expressionTips.length > 0 && (
         <Card>
             <CardHeader>
@@ -133,7 +133,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
       )}
 
 
-      {/* Follow-up Questions */}
+      {/* Try these next */}
       {feedback.followUpQuestions && feedback.followUpQuestions.length > 0 && (
         <Card>
           <CardHeader>
@@ -160,7 +160,7 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
         </Card>
       )}
 
-      {/* Q&A Pairs */}
+      {/* Conversation Q&A */}
       {feedback.qaPairs && feedback.qaPairs.length > 0 && (
         <Card>
           <CardHeader>
@@ -209,7 +209,6 @@ export default function ConceptPage() {
   const params = useParams();
   const id = params.id as string;
   useProtectedRoute('student');
-  const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
   
   const [conceptData, setConceptData] = useState<DemoConcept | null>(null);
@@ -401,5 +400,5 @@ export default function ConceptPage() {
     </div>
   );
 }
-
+    
     
