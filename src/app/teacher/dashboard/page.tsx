@@ -153,8 +153,8 @@ function ConceptList() {
                 </TableHeader>
                 <TableBody>
                   {Object.entries(groupedConcepts).map(([chapter, concepts]) => (
-                    <>
-                        <TableRow key={chapter} className="bg-muted/50 hover:bg-muted/50">
+                    <React.Fragment key={chapter}>
+                        <TableRow className="bg-muted/50 hover:bg-muted/50">
                             <TableCell colSpan={3} className="font-bold text-foreground">{chapter}</TableCell>
                         </TableRow>
                         {concepts.map((concept) => (
@@ -179,7 +179,7 @@ function ConceptList() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                    </>
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
