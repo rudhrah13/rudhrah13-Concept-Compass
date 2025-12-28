@@ -62,6 +62,15 @@ export default function TeacherDashboard() {
   );
 }
 
+const chapterIcons: { [key: string]: string } = {
+    'Plants': '🌿',
+    'Water': '💧',
+    'Animals & Human Body': '🐾',
+    'Materials & Changes': '🧪',
+    'Energy, Light & Sound': '⚡',
+    'Earth, Water & Environment': '🌍'
+};
+
 function ConceptList() {
     const [concepts, setConcepts] = useState<ConceptPerformance[]>([]);
     const [loading, setLoading] = useState(true);
@@ -155,7 +164,12 @@ function ConceptList() {
                   {Object.entries(groupedConcepts).map(([chapter, concepts]) => (
                     <React.Fragment key={chapter}>
                         <TableRow className="bg-muted/50 hover:bg-muted/50">
-                            <TableCell colSpan={3} className="font-bold text-foreground">{chapter}</TableCell>
+                            <TableCell colSpan={3} className="font-bold text-foreground">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">{chapterIcons[chapter] || '🧪'}</span>
+                                    {chapter}
+                                </div>
+                            </TableCell>
                         </TableRow>
                         {concepts.map((concept) => (
                             <TableRow key={concept.id} className="group">
@@ -192,7 +206,7 @@ function ConceptList() {
               <CardTitle>Concept Performance</CardTitle>
               <CardDescription>Click on a concept to drill down into student-level understanding.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {renderContent()}
             </CardContent>
         </>
@@ -216,7 +230,7 @@ function StudentList() {
                     rollNumber: s.studentId,
                 }));
                 setStudents(transformedStudents);
-            } catch (e) {
+            } catch (e) => {
                 setError("Failed to load students.");
             } finally {
                 setLoading(false);
@@ -281,7 +295,7 @@ function StudentList() {
               <CardTitle>Student Roster</CardTitle>
               <CardDescription>Click on a student to view their overall performance profile.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {renderContent()}
             </CardContent>
         </>
