@@ -225,29 +225,6 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                     </CardContent>
                 </Card>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Learning Patterns</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                               {student.patterns.map((item, i) => <li key={i}>{item}</li>)}
-                            </ul>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Target className="w-5 h-5" />Suggested Focus Actions</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                                {student.focusActions.map((item, i) => <li key={i}>{item}</li>)}
-                            </ul>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Recent Concept Attempts</CardTitle>
@@ -270,6 +247,38 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                         </div>
                     </CardContent>
                 </Card>
+
+                 <Accordion type="single" collapsible className="w-full space-y-2">
+                    <AccordionItem value="detailed-analysis" className="border-b-0 rounded-lg bg-card shadow-sm">
+                        <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
+                            <div className="flex items-center gap-4">
+                            Detailed Analysis
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-4 space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Learning Patterns</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                                    {student.patterns.map((item, i) => <li key={i}>{item}</li>)}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2"><Target className="w-5 h-5" />Suggested Focus Actions</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                                        {student.focusActions.map((item, i) => <li key={i}>{item}</li>)}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </div>
         </div>
     );
