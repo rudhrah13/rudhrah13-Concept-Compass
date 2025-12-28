@@ -9,38 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { ConceptPerformance, Student, UnderstandingLevel } from '@/types';
+import type { ConceptPerformance, Student as StudentType, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
 
-
-const dummyConcepts: ConceptPerformance[] = [
-  {
-    id: 'photosynthesis',
-    name: 'Photosynthesis',
-    understanding: { strong: 25, partial: 60, weak: 15 },
-  },
-  {
-    id: 'respiration',
-    name: 'Respiration',
-    understanding: { strong: 20, partial: 45, weak: 35 },
-  },
-  {
-    id: 'light-reflection',
-    name: 'Light Reflection',
-    understanding: { strong: 75, partial: 20, weak: 5 },
-  },
-];
-
-const dummyStudents: Student[] = [
-    { id: '1', name: 'Anonymized Student 1', rollNumber: 'S101'},
-    { id: '2', name: 'Anonymized Student 2', rollNumber: 'S102'},
-    { id: '3', name: 'Anonymized Student 3', rollNumber: 'S103'},
-    { id: '4', name: 'Anonymized Student 4', rollNumber: 'S104'},
-    { id: '5', name: 'Anonymized Student 5', rollNumber: 'S105'},
-];
 
 export default function TeacherDashboard() {
   useProtectedRoute('teacher');
+
+  useEffect(() => {
+    initializeDemoData();
+  }, []);
 
   return (
     <div className="container py-10">
@@ -58,7 +37,7 @@ export default function TeacherDashboard() {
         </Breadcrumb>
         <h1 className="text-4xl font-bold mb-2">Class Understanding Overview</h1>
         <div className="flex items-center gap-4 text-muted-foreground">
-          <span>Class: <strong>8A</strong></span>
+          <span>Class: <strong>5A</strong></span>
           <span>Subject: <strong>Science</strong></span>
         </div>
       </header>
@@ -92,9 +71,34 @@ function ConceptList() {
         setLoading(true);
         setError(null);
         setTimeout(() => {
-            // To test error: setError("Failed to load concepts.");
-            setConcepts(dummyConcepts);
-            setLoading(false);
+            try {
+                const allConcepts: DemoConcept[] = getConcepts();
+                const allEvaluations: DemoEvaluation[] = getEvaluations();
+                const allStudents: DemoStudent[] = getStudents();
+
+                const performanceData = allConcepts.map(concept => {
+                    const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === concept.conceptId);
+                    const totalEvals = evaluationsForConcept.length;
+
+                    const understanding = {
+                        strong: totalEvals > 0 ? (evaluationsForConcept.filter(e => e.evaluation.understanding === 'Strong').length / totalEvals) * 100 : 0,
+                        partial: totalEvals > 0 ? (evaluationsForConcept.filter(e => e.evaluation.understanding === 'Partial').length / totalEvals) * 100 : 0,
+                        weak: totalEvals > 0 ? (evaluationsForConcept.filter(e => e.evaluation.understanding === 'Weak').length / totalEvals) * 100 : 0,
+                    };
+
+                    return {
+                        id: concept.conceptId,
+                        name: concept.chapter,
+                        understanding,
+                    };
+                });
+                
+                setConcepts(performanceData);
+            } catch (e) {
+                setError("Failed to load concepts.");
+            } finally {
+                setLoading(false);
+            }
         }, 1000);
     };
 
@@ -102,9 +106,9 @@ function ConceptList() {
 
     const getUnderstandingText = (concept: ConceptPerformance) => {
         const { strong, partial, weak } = concept.understanding;
-        if (strong > 65) return `${strong}% Strong`;
-        if (weak > 30) return `${weak}% Weak`;
-        return `${partial}% Partial`;
+        if (strong > 65) return `${Math.round(strong)}% Strong`;
+        if (weak > 30) return `${Math.round(weak)}% Weak`;
+        return `${Math.round(partial)}% Partial`;
     }
 
     const getUnderstandingBadgeForConcept = (concept: ConceptPerformance) => {
@@ -180,7 +184,7 @@ function ConceptList() {
 }
 
 function StudentList() {
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<StudentType[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -188,9 +192,19 @@ function StudentList() {
         setLoading(true);
         setError(null);
         setTimeout(() => {
-            // To test error: setError("Failed to load students.");
-            setStudents(dummyStudents);
-            setLoading(false);
+            try {
+                const studentData: DemoStudent[] = getStudents();
+                const transformedStudents = studentData.map(s => ({
+                    id: s.studentId,
+                    name: s.name,
+                    rollNumber: s.studentId,
+                }));
+                setStudents(transformedStudents);
+            } catch (e) {
+                setError("Failed to load students.");
+            } finally {
+                setLoading(false);
+            }
         }, 1000);
     };
 

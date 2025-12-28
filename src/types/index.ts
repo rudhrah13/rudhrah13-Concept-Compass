@@ -100,6 +100,36 @@ export interface StudentProfile {
   }[];
 }
 
+// LocalStorage Demo Schemas
+export interface DemoStudent {
+  studentId: string;
+  name: string;
+  class: string;
+}
+
+export interface DemoConcept {
+  conceptId: string;
+  subject: string;
+  chapter: string;
+  grade: number;
+}
+
+export interface DemoEvaluation {
+  sessionId: string;
+  studentId: string;
+  conceptId: string;
+  date: string;
+  evaluation: {
+    understanding: UnderstandingLevel;
+    strength: string;
+    gap: string;
+    language: {
+      clarity: string;
+      confidence: string;
+    }
+  }
+}
+
 
 // Zod Schemas for Genkit Flows
 

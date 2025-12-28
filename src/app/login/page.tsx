@@ -3,26 +3,40 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Compass } from 'lucide-react';
-
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { initializeDemoData, getStudents } from '@/lib/demo-data';
+import type { DemoStudent } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [students, setStudents] = useState<DemoStudent[]>([]);
+  const [studentId, setStudentId] = useState('');
+  const [studentName, setStudentName] = useState('');
+
+  useEffect(() => {
+    initializeDemoData();
+    setStudents(getStudents());
+  }, []);
 
   const handleStudentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const studentId = formData.get('studentId') as string;
-    const studentName = formData.get('studentName') as string;
     
-    localStorage.setItem('role', 'student');
-    localStorage.setItem('studentId', studentId);
-    localStorage.setItem('studentName', studentName);
-    router.push('/student/dashboard');
+    // Find student in our demo data
+    const student = students.find(s => s.studentId === studentId && s.name.toLowerCase() === studentName.toLowerCase());
+
+    if (student) {
+        localStorage.setItem('role', 'student');
+        localStorage.setItem('studentId', student.studentId);
+        localStorage.setItem('studentName', student.name);
+        router.push('/student/dashboard');
+    } else {
+        alert('Student not found. Please check your Name and ID.');
+    }
   };
 
   const handleTeacherSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -56,11 +70,11 @@ export default function LoginPage() {
                   <form onSubmit={handleStudentSubmit} className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="studentName">Student Name</Label>
-                      <Input id="studentName" name="studentName" placeholder="e.g., John Doe" required />
+                      <Input id="studentName" name="studentName" placeholder="e.g., Aarav" required value={studentName} onChange={(e) => setStudentName(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="studentId">Student ID / Roll Number</Label>
-                      <Input id="studentId" name="studentId" placeholder="e.g., S101" required />
+                      <Input id="studentId" name="studentId" placeholder="e.g., S001" required value={studentId} onChange={(e) => setStudentId(e.target.value)} />
                     </div>
                     <Button type="submit" className="w-full bg-accent hover:bg-accent/90">Sign In as Student</Button>
                   </form>
@@ -69,11 +83,11 @@ export default function LoginPage() {
                   <form onSubmit={handleTeacherSubmit} className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="teacherId">Email or Teacher ID</Label>
-                      <Input id="teacherId" placeholder="e.g., teacher@school.edu" required />
+                      <Input id="teacherId" placeholder="e.g., teacher@school.edu" required defaultValue="teacher@school.edu" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required />
+                      <Input id="password" type="password" required defaultValue="password" />
                     </div>
                     <Button type="submit" className="w-full">Sign In as Teacher</Button>
                   </form>

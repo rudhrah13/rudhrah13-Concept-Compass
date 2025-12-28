@@ -11,30 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { ConceptOverview, StudentAttemptSummary, UnderstandingLevel } from '@/types';
+import type { ConceptOverview, UnderstandingLevel, DemoConcept, DemoEvaluation, DemoStudent } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { getConcepts, getEvaluations, getStudents, initializeDemoData } from '@/lib/demo-data';
 
-const dummyConceptData: ConceptOverview = {
-    id: 'photosynthesis',
-    name: 'Photosynthesis',
-    distribution: { strong: 5, partial: 12, weak: 3 },
-    keyGaps: [
-        'Missed steps of food preparation process.',
-        'Confused the roles of sunlight and heat.',
-        'Difficulty explaining the concept in their own words.',
-    ],
-    suggestedActions: [
-        'Re-explain the process using a visual diagram on the board.',
-        'Ask students to explain the concept aloud to a partner.',
-        'Use the real-life example of a houseplant needing sunlight.',
-    ],
-    studentAttempts: [
-        { studentId: '1', studentName: 'Anonymized Student 1', rollNumber: 'S101', understanding: 'Partial', keyIssue: 'Incomplete food steps' },
-        { studentId: '2', studentName: 'Anonymized Student 2', rollNumber: 'S102', understanding: 'Strong', keyIssue: 'None' },
-        { studentId: '3', studentName: 'Anonymized Student 3', rollNumber: 'S103', understanding: 'Weak', keyIssue: 'Role of CO2 missing' },
-        { studentId: '4', studentName: 'Anonymized Student 4', rollNumber: 'S104', understanding: 'Partial', keyIssue: 'Confused sunlight/heat' },
-    ]
-};
 
 const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
@@ -50,7 +30,7 @@ const getUnderstandingBadge = (level: UnderstandingLevel) => {
 
 export default function ConceptOverviewPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params.id as string; // conceptId
   useProtectedRoute('teacher');
   const [concept, setConcept] = useState<ConceptOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,11 +39,55 @@ export default function ConceptOverviewPage() {
   const fetchData = () => {
     setLoading(true);
     setError(null);
+    initializeDemoData();
+
     setTimeout(() => {
-      // To test error: setError("Failed to load concept overview.");
-      // To test empty: setConcept({ ...dummyConceptData, studentAttempts: [] });
-      setConcept(dummyConceptData);
-      setLoading(false);
+      try {
+        const conceptData: DemoConcept | undefined = getConcepts().find(c => c.conceptId === id);
+        if (!conceptData) {
+            setError("Concept not found.");
+            setLoading(false);
+            return;
+        }
+
+        const allEvaluations: DemoEvaluation[] = getEvaluations();
+        const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === id);
+        const allStudents: DemoStudent[] = getStudents();
+
+        const totalEvals = evaluationsForConcept.length;
+
+        const overview: ConceptOverview = {
+            id: conceptData.conceptId,
+            name: conceptData.chapter,
+            distribution: {
+                strong: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Strong').length,
+                partial: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Partial').length,
+                weak: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Weak').length,
+            },
+            keyGaps: [...new Set(evaluationsForConcept.map(e => e.evaluation.gap).filter(g => g && g !== 'None'))],
+            suggestedActions: [ // This can be made dynamic later
+                'Re-explain the process using a visual diagram on the board.',
+                'Ask students to explain the concept aloud to a partner.',
+                'Use the real-life example of a houseplant needing sunlight.',
+            ],
+            studentAttempts: evaluationsForConcept.map(e => {
+                const student = allStudents.find(s => s.studentId === e.studentId);
+                return {
+                    studentId: e.studentId,
+                    studentName: student?.name || 'Unknown Student',
+                    rollNumber: student?.studentId || 'N/A',
+                    understanding: e.evaluation.understanding,
+                    keyIssue: e.evaluation.gap,
+                };
+            }),
+        };
+        
+        setConcept(overview);
+      } catch(e) {
+          setError("Failed to load concept overview.");
+      } finally {
+        setLoading(false);
+      }
     }, 1000);
   };
 
@@ -115,7 +139,7 @@ export default function ConceptOverviewPage() {
         </Breadcrumb>
         <h1 className="text-4xl font-bold mb-2">Concept Overview: {concept.name}</h1>
         <div className="flex items-center gap-4 text-muted-foreground">
-          <span>Class: <strong>8A</strong></span>
+          <span>Class: <strong>5A</strong></span>
           <span>Subject: <strong>Science</strong></span>
         </div>
       </header>
@@ -140,9 +164,13 @@ export default function ConceptOverviewPage() {
                     <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Key Gaps Identified</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                        {concept.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
-                    </ul>
+                    {concept.keyGaps.length > 0 ? (
+                        <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                            {concept.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
+                        </ul>
+                    ) : (
+                        <p className="text-muted-foreground">No common gaps identified yet.</p>
+                    )}
                 </CardContent>
             </Card>
             <Card>

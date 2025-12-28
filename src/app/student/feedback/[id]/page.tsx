@@ -20,33 +20,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { StudentAttempt, UnderstandingLevel } from '@/types';
+import type { StudentAttempt, UnderstandingLevel, DemoEvaluation } from '@/types';
 import { featureFlags } from '@/lib/feature-flags';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { getEvaluations, getConcepts, initializeDemoData } from '@/lib/demo-data';
 
-// Mock Data for the feedback page
-const mockAttemptData: StudentAttempt = {
-  conceptName: 'Photosynthesis',
-  questions: [
-    'Explain photosynthesis in your own words.',
-    'What happens if sunlight is not available?',
-  ],
-  studentAnswers: [
-    'Photosynthesis is when plants make their own food. They use sunlight and water. It is green.',
-    'If there is no sun, the plant will die because it cannot make food.',
-  ],
-  feedback: {
-    understandingLevel: 'Partial',
-    strength: 'You correctly identified that plants use sunlight to make food.',
-    gap: 'The role of carbon dioxide was missing, and the explanation of the food-making process could be more detailed.',
-    languageFeedback: {
-      spelling: ['photosynthesis'],
-      clarity: 'Try using shorter sentences to explain the steps.',
-    },
-    correctExplanation:
-      'Photosynthesis is the process where plants use sunlight, water, and carbon dioxide from the air to create their own food (sugar/glucose) for energy, releasing oxygen as a byproduct.',
-  },
-};
 
 const getUnderstandingSummary = (level: UnderstandingLevel) => {
   switch (level) {
@@ -62,7 +40,7 @@ const getUnderstandingSummary = (level: UnderstandingLevel) => {
 
 export default function FeedbackPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params.id as string; // This is the conceptId
   useProtectedRoute('student');
   const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,12 +49,52 @@ export default function FeedbackPage() {
   const fetchData = () => {
     setLoading(true);
     setError(null);
-    // Simulate API call
+    initializeDemoData();
+
     setTimeout(() => {
-      // To test error: setError("Failed to load feedback.");
-      // To test empty: setAttempt(null);
-      setAttempt(mockAttemptData);
-      setLoading(false);
+        try {
+            const studentId = localStorage.getItem('studentId');
+            if (!studentId) {
+                setError("Student not found. Please log in again.");
+                setLoading(false);
+                return;
+            }
+
+            const allEvaluations: DemoEvaluation[] = getEvaluations();
+            const studentEvaluation = allEvaluations.find(e => e.studentId === studentId && e.conceptId === id);
+            
+            if (!studentEvaluation) {
+                // No attempt found for this concept by this student
+                setAttempt(null);
+                setLoading(false);
+                return;
+            }
+
+            const concept = getConcepts().find(c => c.conceptId === id);
+
+            // Transform DemoEvaluation to StudentAttempt
+            const studentAttempt: StudentAttempt = {
+                conceptName: concept?.chapter || 'Unknown Concept',
+                questions: ['Explain the concept in your own words.'], // Placeholder as this is not in schema
+                studentAnswers: ['Your recorded answer.'], // Placeholder as this is not in schema
+                feedback: {
+                    understandingLevel: studentEvaluation.evaluation.understanding,
+                    strength: studentEvaluation.evaluation.strength,
+                    gap: studentEvaluation.evaluation.gap,
+                    languageFeedback: {
+                        clarity: studentEvaluation.evaluation.language.clarity,
+                    },
+                    // This is missing in the new schema, so we create a generic one
+                    correctExplanation: `A correct explanation for ${concept?.chapter || 'this concept'} would detail the key processes and components involved.`,
+                },
+            };
+            
+            setAttempt(studentAttempt);
+        } catch (e) {
+            setError("Failed to load feedback.");
+        } finally {
+            setLoading(false);
+        }
     }, 1000);
   };
 
@@ -198,7 +216,7 @@ export default function FeedbackPage() {
         </div>
 
         {/* Section 3: Expression Tips */}
-        {showLanguageFeedback && (attempt.feedback.languageFeedback?.spelling || attempt.feedback.languageFeedback?.clarity) && (
+        {showLanguageFeedback && (attempt.feedback.languageFeedback?.clarity) && (
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-base font-semibold">
@@ -206,15 +224,6 @@ export default function FeedbackPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 pt-0 text-sm text-muted-foreground">
-              {attempt.feedback.languageFeedback.spelling && (
-                <div className="flex items-start gap-3">
-                  <Pencil className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    Spelling: Check the spelling of &quot;
-                    {attempt.feedback.languageFeedback.spelling.join(', ')}&quot;.
-                  </p>
-                </div>
-              )}
               {attempt.feedback.languageFeedback.clarity && (
                 <div className="flex items-start gap-3">
                   <Puzzle className="h-4 w-4 mt-0.5 flex-shrink-0" />

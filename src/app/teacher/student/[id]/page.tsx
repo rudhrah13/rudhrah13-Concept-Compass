@@ -25,57 +25,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { StudentProfile, StudentAttempt, UnderstandingLevel } from '@/types';
+import type { StudentProfile, StudentAttempt, UnderstandingLevel, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
 import { featureFlags } from '@/lib/feature-flags';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
 
-const mockStudentProfileData: StudentProfile = {
-    id: '1',
-    name: 'Anonymized Student 1',
-    rollNumber: 'S101',
-    snapshot: {
-        strongConcepts: 5,
-        needsWork: 8,
-        repeatedIssue: 'Difficulty in applying concepts to new situations.',
-    },
-    patterns: [
-        'Explanation clarity issues',
-        'Application difficulty',
-        'Language improvement needed'
-    ],
-    focusActions: [
-        'Encourage oral explanation for concepts.',
-        'Suggest using shorter, simpler sentences.',
-        'Pair with a peer for revision sessions.',
-    ],
-    recentConcepts: [
-        { id: 'photosynthesis', name: 'Photosynthesis', status: 'Partial', date: '2 days ago' },
-        { id: 'respiration', name: 'Respiration', status: 'Weak', date: '5 days ago' },
-        { id: 'light-reflection', name: 'Light Reflection', status: 'Strong', date: '1 week ago' },
-    ]
-};
-
-const mockStudentAttemptData: StudentAttempt = {
-    conceptName: 'Photosynthesis',
-    questions: [
-        'Explain photosynthesis in your own words.',
-        'What happens if sunlight is not available?',
-    ],
-    studentAnswers: [
-        'Photosynthesis is when plants make their own food. They use sunlight and water. It is green.',
-        'If there is no sun, the plant will die because it cannot make food.',
-    ],
-    feedback: {
-        understandingLevel: 'Partial',
-        strength: 'You correctly identified that plants use sunlight to make food.',
-        gap: 'The role of carbon dioxide was missing, and the explanation of the food-making process could be more detailed.',
-        languageFeedback: {
-            spelling: ['photosynthesis'],
-            clarity: 'Try using shorter sentences to explain the steps.',
-        },
-        correctExplanation: 'Photosynthesis is the process where plants use sunlight, water, and carbon dioxide from the air to create their own food (sugar/glucose) for energy, releasing oxygen as a byproduct.',
-    }
-};
 
 const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
@@ -95,6 +49,10 @@ export default function TeacherStudentOverviewPage() {
     const params = useParams();
     const studentId = params.id as string;
     const conceptId = searchParams.get('concept');
+    
+    useEffect(() => {
+        initializeDemoData();
+    }, []);
 
     if (conceptId) {
         return <StudentConceptFeedbackView studentId={studentId} conceptId={conceptId} />;
@@ -124,9 +82,56 @@ function StudentProfileView({ studentId }: { studentId: string }) {
         setLoading(true);
         setError(null);
         setTimeout(() => {
-            // To test error: setError("Failed to load student profile.");
-            setStudent(mockStudentProfileData);
-            setLoading(false);
+           try {
+            const studentData = getStudents().find(s => s.studentId === studentId);
+            if (!studentData) {
+                setError("Student not found.");
+                setLoading(false);
+                return;
+            }
+
+            const studentEvaluations = getEvaluations().filter(e => e.studentId === studentId);
+            const allConcepts = getConcepts();
+
+            const strongConcepts = studentEvaluations.filter(e => e.evaluation.understanding === 'Strong').length;
+            const needsWork = studentEvaluations.filter(e => e.evaluation.understanding !== 'Strong').length;
+            
+            const gaps = studentEvaluations.map(e => e.evaluation.gap).filter(g => g && g !== 'None');
+            const repeatedIssue = gaps.length > 1 ? 'Multiple areas need attention.' : gaps[0] || 'No specific repeated issues found.';
+
+            const profile: StudentProfile = {
+                id: studentData.studentId,
+                name: studentData.name,
+                rollNumber: studentData.studentId,
+                snapshot: {
+                    strongConcepts,
+                    needsWork,
+                    repeatedIssue,
+                },
+                patterns: [ // This would require more complex analysis in a real app
+                    'Explanation clarity issues',
+                    'Application difficulty',
+                ],
+                focusActions: [ // This would be AI-generated
+                    'Encourage oral explanation for concepts.',
+                    'Suggest using shorter, simpler sentences.',
+                ],
+                recentConcepts: studentEvaluations.map(e => {
+                    const concept = allConcepts.find(c => c.conceptId === e.conceptId);
+                    return {
+                        id: e.conceptId,
+                        name: concept?.chapter || 'Unknown Concept',
+                        status: e.evaluation.understanding,
+                        date: new Date(e.date).toLocaleDateString(),
+                    }
+                }).slice(0, 5), // Limit to recent 5
+            };
+            setStudent(profile);
+           } catch(e) {
+                setError("Failed to load student profile.");
+           } finally {
+                setLoading(false);
+           }
         }, 1000);
     };
 
@@ -248,15 +253,42 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const student = mockStudentProfileData; // In a real app, you might fetch this too
+  const student = getStudents().find(s => s.studentId === studentId);
 
   const fetchData = () => {
     setLoading(true);
     setError(null);
     setTimeout(() => {
-      // To test error: setError("Failed to load attempt.");
-      setAttempt(mockStudentAttemptData);
-      setLoading(false);
+        try {
+            const evaluation = getEvaluations().find(e => e.studentId === studentId && e.conceptId === conceptId);
+            if (!evaluation) {
+                setAttempt(null);
+                setLoading(false);
+                return;
+            }
+            const concept = getConcepts().find(c => c.conceptId === conceptId);
+
+            const transformedAttempt: StudentAttempt = {
+                conceptName: concept?.chapter || 'Unknown Concept',
+                questions: ['Explain the concept in your own words.'], // Placeholder
+                studentAnswers: ['Student answer was recorded via voice.'], // Placeholder
+                feedback: {
+                    understandingLevel: evaluation.evaluation.understanding,
+                    strength: evaluation.evaluation.strength,
+                    gap: evaluation.evaluation.gap,
+                    languageFeedback: {
+                        clarity: evaluation.evaluation.language.clarity,
+                    },
+                    correctExplanation: 'A correct explanation of the concept involves understanding its core principles and applications.'
+                }
+            };
+            setAttempt(transformedAttempt);
+
+        } catch (e) {
+            setError("Failed to load attempt.");
+        } finally {
+            setLoading(false);
+        }
     }, 1000);
   };
   useEffect(fetchData, [studentId, conceptId]);
@@ -286,7 +318,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     );
   }
   
-  if (!attempt) {
+  if (!attempt || !student) {
     return (
       <div className="container mx-auto py-10 text-center">
         <p>This student has not attempted this concept yet.</p>
@@ -309,7 +341,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
       <div className="flex justify-between items-center mb-4">
         <Button asChild variant="outline" size="sm">
-            <Link href={`/teacher/student/${student.id}`}>
+            <Link href={`/teacher/student/${student.studentId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student Profile
             </Link>
         </Button>
@@ -323,7 +355,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
       <header className="mb-6 rounded-lg border bg-card text-card-foreground shadow-sm p-4">
         <div className="flex justify-between items-center">
             <div>
-                <h1 className="text-2xl font-bold">{student.name} ({student.rollNumber})</h1>
+                <h1 className="text-2xl font-bold">{student.name} ({student.studentId})</h1>
                 <p className="text-muted-foreground">{attempt.conceptName}</p>
             </div>
             <Badge variant="outline">Teacher View</Badge>
@@ -400,7 +432,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
           )}
         </div>
 
-        {showLanguageFeedback && (attempt.feedback.languageFeedback?.spelling || attempt.feedback.languageFeedback?.clarity) && (
+        {showLanguageFeedback && (attempt.feedback.languageFeedback?.clarity) && (
           <Card>
             <CardHeader className="p-4">
               <CardTitle className="text-base font-semibold">
@@ -408,15 +440,6 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 pt-0 text-sm text-muted-foreground">
-              {attempt.feedback.languageFeedback.spelling && (
-                <div className="flex items-start gap-3">
-                  <Pencil className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    Spelling: Check the spelling of &quot;
-                    {attempt.feedback.languageFeedback.spelling.join(', ')}&quot;.
-                  </p>
-                </div>
-              )}
               {attempt.feedback.languageFeedback.clarity && (
                 <div className="flex items-start gap-3">
                   <Puzzle className="h-4 w-4 mt-0.5 flex-shrink-0" />
