@@ -2,6 +2,8 @@
 
 import type { DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
 
+// The default student list is now sorted alphabetically by name,
+// and studentId is assigned sequentially to reflect a realistic roll number.
 const defaultStudents: DemoStudent[] = [
   { "studentId": "S001", "name": "Aarav", "class": "5A" },
   { "studentId": "S002", "name": "Advik", "class": "5A" },
@@ -83,7 +85,7 @@ const defaultConcepts: DemoConcept[] = [
 const defaultEvaluations: DemoEvaluation[] = [
   {
     "sessionId": "E001",
-    "studentId": "S001",
+    "studentId": "S001", // Aarav
     "conceptId": "photosynthesis",
     "date": "2025-01-12",
     "conversation": {
@@ -213,10 +215,13 @@ const defaultEvaluations: DemoEvaluation[] = [
 // Function to initialize localStorage with default data if it's not already there
 export function initializeDemoData() {
   if (typeof window !== 'undefined') {
-    if (!localStorage.getItem('students')) {
-      localStorage.setItem('students', JSON.stringify(defaultStudents));
-    }
-    // Always overwrite concepts and evaluations to ensure the latest data structure
+    // Clear existing data to ensure a fresh start on every load.
+    // This prevents stale or incorrect data from persisting.
+    localStorage.removeItem('students');
+    localStorage.removeItem('evaluations');
+
+    // Set fresh data
+    localStorage.setItem('students', JSON.stringify(defaultStudents));
     localStorage.setItem('concepts', JSON.stringify(defaultConcepts));
     localStorage.setItem('evaluations', JSON.stringify(defaultEvaluations));
   }
