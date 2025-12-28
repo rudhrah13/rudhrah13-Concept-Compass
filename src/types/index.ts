@@ -139,6 +139,7 @@ export interface DemoEvaluation {
       confidence: string;
     },
     nextSteps?: string[];
+    practiceQuestions?: string[];
   },
   correctExplanation: string;
 }

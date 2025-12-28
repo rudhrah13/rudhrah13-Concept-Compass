@@ -106,6 +106,10 @@ const defaultEvaluations: DemoEvaluation[] = [
       "nextSteps": [
           "Try explaining how water and air help plants make food.",
           "Think about where plants get water from and how air reaches the leaves."
+      ],
+      "practiceQuestions": [
+        "Can you explain why sunlight is important for plants?",
+        "What might happen if a plant does not get enough water?"
       ]
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
@@ -133,6 +137,10 @@ const defaultEvaluations: DemoEvaluation[] = [
       "nextSteps": [
           "Listen again to the correct explanation of how plants make their own food.",
           "Try explaining step-by-step how a plant gets its energy, starting from the sun."
+      ],
+      "practiceQuestions": [
+        "What are the three main things a plant needs for photosynthesis?",
+        "What do the roots of a plant do?"
       ]
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
@@ -156,7 +164,11 @@ const defaultEvaluations: DemoEvaluation[] = [
       "understanding": "Strong",
       "strength": "You clearly explained the roles of sunlight, water, and CO2, and mentioned the byproduct oxygen.",
       "gap": "None",
-      "language": { "clarity": "High", "confidence": "High" }
+      "language": { "clarity": "High", "confidence": "High" },
+      "practiceQuestions": [
+        "What is the name of the green pigment that helps plants absorb sunlight?",
+        "Where does the oxygen that plants release come from?"
+      ]
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
@@ -183,6 +195,10 @@ const defaultEvaluations: DemoEvaluation[] = [
       "nextSteps": [
           "Practice using the word 'evaporation' to describe what happens to water when it gets hot.",
           "Try explaining the water cycle to a friend or family member."
+      ],
+       "practiceQuestions": [
+        "Besides a puddle, where else can you see evaporation happening in real life?",
+        "Does water evaporate faster on a hot day or a cold day? Why?"
       ]
     },
     "correctExplanation": "Evaporation is the process where a liquid, like water, turns into a gas or vapor. On a hot day, the sun's energy causes water molecules to move faster and escape into the air as water vapor."
@@ -206,7 +222,11 @@ const defaultEvaluations: DemoEvaluation[] = [
       "understanding": "Strong",
       "strength": "You correctly identified all major parts of a plant and even self-corrected.",
       "gap": "None",
-      "language": { "clarity": "High", "confidence": "High" }
+      "language": { "clarity": "High", "confidence": "High" },
+      "practiceQuestions": [
+        "What is the job of the stem?",
+        "What do the roots do for the plant?"
+      ]
     },
     "correctExplanation": "The main parts of a plant are the roots, which anchor the plant and absorb water; the stem, which supports the plant; the leaves, which perform photosynthesis; and the flowers, which are involved in reproduction."
   }

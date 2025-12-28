@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   MessageSquare,
   Mic,
-  Sparkles
+  Sparkles,
+  BrainCircuit
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -255,6 +256,33 @@ export default function FeedbackPage() {
             </Card>
           </AccordionItem>
         </Accordion>
+
+        {/* Try these next */}
+        {evaluation.evaluation.practiceQuestions && evaluation.evaluation.practiceQuestions.length > 0 && (
+            <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
+                <BrainCircuit className="h-5 w-5" />
+                Try these next
+                </CardTitle>
+                <CardDescription>
+                    You can try answering these to practise the concept.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                {evaluation.evaluation.practiceQuestions.map((question: string, index: number) => (
+                    <li key={index} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                    </span>
+                    <span>{question}</span>
+                    </li>
+                ))}
+                </ul>
+            </CardContent>
+            </Card>
+        )}
 
         {/* Section 4: Action Button */}
         <div className="text-center pt-4">
