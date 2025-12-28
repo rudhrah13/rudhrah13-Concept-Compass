@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -153,8 +153,8 @@ function ConceptList() {
                 </TableHeader>
                 <TableBody>
                   {Object.entries(groupedConcepts).map(([chapter, concepts]) => (
-                    <>
-                        <TableRow key={chapter} className="bg-muted/50 hover:bg-muted/50">
+                    <Fragment key={chapter}>
+                        <TableRow className="bg-muted/50 hover:bg-muted/50">
                             <TableCell colSpan={3} className="font-bold text-foreground">{chapter}</TableCell>
                         </TableRow>
                         {concepts.map((concept) => (
@@ -179,7 +179,7 @@ function ConceptList() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                    </>
+                    </Fragment>
                   ))}
                 </TableBody>
               </Table>
