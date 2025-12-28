@@ -20,6 +20,9 @@ import {
   ThumbsUp,
   User,
   X,
+  MessageSquare,
+  Bot,
+  UserCircle,
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -27,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { StudentProfile, StudentAttempt, UnderstandingLevel, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
+import type { StudentProfile, UnderstandingLevel, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
 import { featureFlags } from '@/lib/feature-flags';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
@@ -48,11 +51,11 @@ const getUnderstandingBadge = (level: UnderstandingLevel) => {
 const getConfidenceIndicator = (confidence: string | undefined) => {
     switch (confidence?.toLowerCase()) {
         case 'high':
-            return <><Smile className="h-4 w-4 text-green-600" /> Speaks confidently</>;
+            return <><Smile className="h-4 w-4 text-green-600" /> High confidence</>;
         case 'medium':
-            return <><Meh className="h-4 w-4 text-yellow-600" /> Sometimes hesitant</>;
+            return <><Meh className="h-4 w-4 text-yellow-600" /> Medium confidence</>;
         case 'low':
-            return <><Frown className="h-4 w-4 text-red-600" /> Very hesitant</>;
+            return <><Frown className="h-4 w-4 text-red-600" /> Low confidence</>;
         default:
             return null;
     }
@@ -68,9 +71,6 @@ export default function TeacherStudentOverviewPage() {
     useEffect(() => {
         initializeDemoData();
     }, []);
-
-    // Default to the new URL param based view
-    const tab = searchParams.get('tab') || 'profile';
 
     if (conceptId) {
         return <StudentConceptFeedbackView studentId={studentId} conceptId={conceptId} />;
@@ -285,12 +285,12 @@ function StudentProfileView({ studentId }: { studentId: string }) {
 }
 
 function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: string, conceptId: string }) {
-  const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
   const [evaluation, setEvaluation] = useState<DemoEvaluation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const student = getStudents().find(s => s.studentId === studentId);
+  const concept = getConcepts().find(c => c.conceptId === conceptId);
 
   const fetchData = () => {
     setLoading(true);
@@ -299,32 +299,8 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         try {
             const evalData = getEvaluations().find(e => e.studentId === studentId && e.conceptId === conceptId);
             setEvaluation(evalData || null);
-
-            if (!evalData) {
-                setAttempt(null);
-                setLoading(false);
-                return;
-            }
-            const concept = getConcepts().find(c => c.conceptId === conceptId);
-
-            const transformedAttempt: StudentAttempt = {
-                conceptName: concept?.chapter || 'Unknown Concept',
-                questions: ['Explain the concept in your own words.'], // Placeholder
-                studentAnswers: ['Student answer was recorded via voice.'], // Placeholder
-                feedback: {
-                    understandingLevel: evalData.evaluation.understanding,
-                    strength: evalData.evaluation.strength,
-                    gap: evalData.evaluation.gap,
-                    languageFeedback: {
-                        clarity: evalData.evaluation.language.clarity,
-                    },
-                    correctExplanation: 'A correct explanation of the concept involves understanding its core principles and applications.'
-                }
-            };
-            setAttempt(transformedAttempt);
-
         } catch (e) {
-            setError("Failed to load attempt.");
+            setError("Failed to load evaluation data.");
         } finally {
             setLoading(false);
         }
@@ -357,7 +333,16 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     );
   }
   
-  if (!attempt || !student) {
+  if (!student || !concept) {
+     return (
+      <div className="container mx-auto py-10 text-center">
+        <p>Student or concept data not found.</p>
+        <Button asChild variant="link"><Link href="/teacher/dashboard">Back to Dashboard</Link></Button>
+      </div>
+    );
+  }
+
+  if (!evaluation) {
     return (
       <div className="container mx-auto py-10 text-center">
         <p>This student has not attempted this concept yet.</p>
@@ -373,7 +358,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     );
   }
 
-  const summary = getUnderstandingSummary(attempt.feedback.understandingLevel);
+  const summary = getUnderstandingSummary(evaluation.evaluation.understanding);
 
   return (
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
@@ -394,74 +379,94 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         <div className="flex justify-between items-center">
             <div>
                 <h1 className="text-2xl font-bold">{student.name} ({student.studentId})</h1>
-                <p className="text-muted-foreground">{attempt.conceptName}</p>
+                <p className="text-muted-foreground">{concept.chapter}</p>
             </div>
             <Badge variant="outline">Teacher View</Badge>
         </div>
       </header>
 
       <div className="space-y-6">
-        
         <Card>
             <CardHeader>
-                <CardTitle>Student's Submission</CardTitle>
-                 <CardDescription className="flex items-center gap-2 pt-2">
+                <CardTitle className="flex items-center gap-2"><MessageSquare />Student Conversation</CardTitle>
+                <CardDescription className="flex items-center gap-2 pt-2">
                     <Mic className="h-4 w-4" />
-                    {getConfidenceIndicator(evaluation?.evaluation.language.confidence)}
+                    {getConfidenceIndicator(evaluation.evaluation.language.confidence)}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                 <blockquote className="mt-2 border-l-2 pl-4 italic text-muted-foreground">
-                    Student answer was recorded via voice. Transcript not shown.
-                </blockquote>
+                {evaluation.conversation.questionsAsked.map((q, index) => (
+                    <div key={index} className="space-y-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                                <Bot className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 rounded-lg border bg-muted p-3">
+                                <p className="text-sm font-semibold">System asked:</p>
+                                <p className="text-muted-foreground">{q.questionText}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/20">
+                                <UserCircle className="h-5 w-5 text-accent-foreground" />
+                            </div>
+                            <div className="flex-1 rounded-lg border bg-background p-3">
+                                <p className="text-sm font-semibold">Student said:</p>
+                                <blockquote className="italic text-muted-foreground">
+                                    "{evaluation.conversation.studentResponses[index]}"
+                                </blockquote>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </CardContent>
         </Card>
 
         <Separator />
         
-        <h2 className="text-xl font-semibold text-center text-muted-foreground pt-2">AI Generated Feedback (Identical to Student View)</h2>
+        <h2 className="text-xl font-semibold text-center text-muted-foreground pt-2">Understanding Analysis</h2>
 
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               {summary.icon}
-              <span className="font-semibold text-lg">{summary.text} {summary.emoji}</span>
+              <span className="font-semibold text-lg">{summary.text}</span>
             </div>
              <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-              <span>{attempt.feedback.understandingLevel === 'Strong' ? 'Clear' : attempt.feedback.understandingLevel === 'Partial' ? 'Almost there' : 'Needs work'}</span>
+              <span>{getUnderstandingBadge(evaluation.evaluation.understanding)}</span>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {attempt.feedback.strength && (
+          {evaluation.evaluation.strength && (
             <Card className="border-green-200 bg-green-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
                 <ThumbsUp className="h-5 w-5 text-green-600" />
                 <CardTitle className="text-base font-semibold text-green-800">
-                  Good job
+                  What the student understood
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 text-green-900">
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.strength}</span>
+                  <span>{evaluation.evaluation.strength}</span>
                 </p>
               </CardContent>
             </Card>
           )}
-          {attempt.feedback.gap && (
+          {evaluation.evaluation.gap && (
             <Card className="border-yellow-200 bg-yellow-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
                 <Lightbulb className="h-5 w-5 text-yellow-600" />
                 <CardTitle className="text-base font-semibold text-yellow-800">
-                  Fix this
+                  Where the student is confused
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 text-yellow-900">
                 <p className="flex items-start gap-2">
                   <X className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.gap}</span>
+                  <span>{evaluation.evaluation.gap}</span>
                 </p>
               </CardContent>
             </Card>
@@ -471,15 +476,15 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1" className="border-b-0">
             <Card className="p-0">
-              <AccordionTrigger className="flex w-full items-center justify-between p-4 text-base font-semibold text-primary hover:no-underline" suppressHydrationWarning>
+              <AccordionTrigger className="flex w-full items-center justify-between p-4 text-base font-semibold text-primary hover:no-underline">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
-                  See a clear explanation
+                  Correct Explanation (for Teacher)
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
                 <p className="text-muted-foreground">
-                  {attempt.feedback.correctExplanation}
+                  {evaluation.correctExplanation}
                 </p>
               </AccordionContent>
             </Card>

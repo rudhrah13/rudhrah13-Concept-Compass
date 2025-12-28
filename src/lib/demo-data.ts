@@ -53,36 +53,86 @@ const defaultEvaluations: DemoEvaluation[] = [
     "studentId": "S001",
     "conceptId": "photosynthesis",
     "date": "2025-01-12",
+    "conversation": {
+      "questionsAsked": [
+        {
+          "questionType": "explain",
+          "questionText": "Can you explain photosynthesis in your own words?"
+        },
+        {
+          "questionType": "follow-up",
+          "questionText": "What do plants use to make their food?"
+        }
+      ],
+      "studentResponses": [
+        "It's how plants eat food from the sun.",
+        "They use sunlight and water. And air."
+      ]
+    },
     "evaluation": {
       "understanding": "Partial",
-      "strength": "Understood role of sunlight",
-      "gap": "Did not explain use of water and air",
+      "strength": "Student correctly identified sunlight as important for food making.",
+      "gap": "Did not explain the role of carbon dioxide from the air or how water is used.",
       "language": {
         "clarity": "Average",
         "confidence": "Medium"
       }
-    }
+    },
+    "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide from the air. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
   {
     "sessionId": "E002",
     "studentId": "S002",
     "conceptId": "photosynthesis",
     "date": "2025-01-12",
+     "conversation": {
+      "questionsAsked": [
+        {
+          "questionType": "explain",
+          "questionText": "Can you explain how plants get their food?"
+        },
+        {
+          "questionType": "misconception",
+          "questionText": "Interesting. So do plants 'eat' the soil?"
+        }
+      ],
+      "studentResponses": [
+        "Plants get their food from the soil. They have roots that eat the soil.",
+        "Yes, the roots are like a mouth for the plant."
+      ]
+    },
     "evaluation": {
       "understanding": "Weak",
       "strength": "None",
-      "gap": "Confused food preparation with soil absorption",
+      "gap": "Confused food preparation with soil absorption and thinks plants 'eat' soil.",
       "language": {
         "clarity": "Low",
         "confidence": "Low"
       }
-    }
+    },
+    "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
    {
     "sessionId": "E003",
     "studentId": "S003",
     "conceptId": "photosynthesis",
     "date": "2025-01-13",
+     "conversation": {
+      "questionsAsked": [
+        {
+          "questionType": "explain",
+          "questionText": "Can you tell me how a plant makes its food?"
+        },
+        {
+          "questionType": "follow-up",
+          "questionText": "That's great. What is the name of the gas plants take from the air?"
+        }
+      ],
+      "studentResponses": [
+        "Plants make food in their leaves. They need sunlight, water from the roots, and air.",
+        "They take in carbon dioxide and release oxygen."
+      ]
+    },
     "evaluation": {
       "understanding": "Strong",
       "strength": "Clearly explained the roles of sunlight, water, and CO2.",
@@ -91,22 +141,40 @@ const defaultEvaluations: DemoEvaluation[] = [
         "clarity": "High",
         "confidence": "High"
       }
-    }
+    },
+    "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
   {
     "sessionId": "E004",
     "studentId": "S001",
     "conceptId": "evaporation",
     "date": "2025-01-14",
+    "conversation": {
+      "questionsAsked": [
+        {
+          "questionType": "explain",
+          "questionText": "What happens to water in a puddle on a hot, sunny day?"
+        },
+        {
+          "questionType": "follow-up",
+          "questionText": "Where does the water go?"
+        }
+      ],
+      "studentResponses": [
+        "The water disappears.",
+        "It goes up into the sky and becomes a cloud. This is evaporation."
+      ]
+    },
     "evaluation": {
       "understanding": "Strong",
-      "strength": "Correctly identified that heat causes water to turn into vapor.",
+      "strength": "Correctly identified that heat causes water to turn into vapor and go into the air.",
       "gap": "None",
       "language": {
         "clarity": "High",
         "confidence": "Medium"
       }
-    }
+    },
+    "correctExplanation": "Evaporation is the process where a liquid, like water, turns into a gas or vapor. On a hot day, the sun's energy causes water molecules to move faster and escape into the air as water vapor."
   }
 ];
 

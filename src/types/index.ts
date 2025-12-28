@@ -119,6 +119,13 @@ export interface DemoEvaluation {
   studentId: string;
   conceptId: string;
   date: string;
+  conversation: {
+    questionsAsked: {
+      questionType: string;
+      questionText: string;
+    }[];
+    studentResponses: string[];
+  },
   evaluation: {
     understanding: UnderstandingLevel;
     strength: string;
@@ -127,7 +134,8 @@ export interface DemoEvaluation {
       clarity: string;
       confidence: string;
     }
-  }
+  },
+  correctExplanation: string;
 }
 
 
