@@ -57,28 +57,28 @@ const defaultEvaluations: DemoEvaluation[] = [
       "questionsAsked": [
         {
           "questionType": "explain",
-          "questionText": "Can you explain photosynthesis in your own words?"
+          "questionText": "Can you tell me how a plant makes its food?"
         },
         {
-          "questionType": "follow-up",
-          "questionText": "What do plants use to make their food?"
+          "questionType": "probe",
+          "questionText": "Apart from sunlight, what else does a plant need?"
         }
       ],
       "studentResponses": [
-        "It's how plants eat food from the sun.",
-        "They use sunlight and water. And air."
+        "Plants make food using sunlight in their leaves.",
+        "I think only sunlight is needed."
       ]
     },
     "evaluation": {
       "understanding": "Partial",
-      "strength": "Student correctly identified sunlight as important for food making.",
-      "gap": "Did not explain the role of carbon dioxide from the air or how water is used.",
+      "strength": "Student correctly identified sunlight as essential for food preparation.",
+      "gap": "Student did not mention the use of water and air in making food.",
       "language": {
         "clarity": "Average",
         "confidence": "Medium"
       }
     },
-    "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide from the air. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
+    "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
   {
     "sessionId": "E002",
@@ -103,8 +103,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Weak",
-      "strength": "None",
-      "gap": "Confused food preparation with soil absorption and thinks plants 'eat' soil.",
+      "strength": "Student understands that roots are important for the plant.",
+      "gap": "Student has a misconception that plants 'eat' soil for food, rather than absorbing water and nutrients from it.",
       "language": {
         "clarity": "Low",
         "confidence": "Low"
@@ -135,7 +135,7 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Strong",
-      "strength": "Clearly explained the roles of sunlight, water, and CO2.",
+      "strength": "Clearly explained the roles of sunlight, water, and CO2, and mentioned the byproduct oxygen.",
       "gap": "None",
       "language": {
         "clarity": "High",
@@ -156,19 +156,19 @@ const defaultEvaluations: DemoEvaluation[] = [
           "questionText": "What happens to water in a puddle on a hot, sunny day?"
         },
         {
-          "questionType": "follow-up",
-          "questionText": "Where does the water go?"
+          "questionType": "probe",
+          "questionText": "Where does the water go? Does it just disappear?"
         }
       ],
       "studentResponses": [
-        "The water disappears.",
-        "It goes up into the sky and becomes a cloud. This is evaporation."
+        "The water in the puddle dries up.",
+        "It goes into the air. But I don't know what it is called."
       ]
     },
     "evaluation": {
-      "understanding": "Strong",
-      "strength": "Correctly identified that heat causes water to turn into vapor and go into the air.",
-      "gap": "None",
+      "understanding": "Partial",
+      "strength": "Student correctly observed that water 'dries up' and 'goes into the air' due to heat.",
+      "gap": "Could not name or fully define the process of evaporation.",
       "language": {
         "clarity": "High",
         "confidence": "Medium"
