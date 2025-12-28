@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, Mic, Square, AlertTriangle, RefreshCw, Volume2 } fr
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from '@/components/ui/label';
 import type { Concept } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { evaluateConcept } from '@/ai/flows/evaluate-concept';
@@ -166,13 +167,6 @@ export default function ConceptPage() {
   const handleSubmit = async (secondAnswer: string) => {
     if (!conceptData) return;
     setConversationTurn('submitting');
-    
-    const conversationPayload = [
-        { role: 'ai', content: firstQuestion },
-        { role: 'student', content: firstAnswer },
-        { role: 'ai', content: secondQuestion },
-        { role: 'student', content: secondAnswer },
-    ];
     
     try {
       await evaluateConcept({
