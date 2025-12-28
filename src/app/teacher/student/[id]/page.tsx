@@ -21,8 +21,6 @@ import {
   User,
   X,
   MessageSquare,
-  Bot,
-  UserCircle,
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -389,35 +387,42 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><MessageSquare />Student Conversation</CardTitle>
-                <CardDescription className="flex items-center gap-2 pt-2">
-                    <Mic className="h-4 w-4" />
-                    {getConfidenceIndicator(evaluation.evaluation.language.confidence)}
+                 <CardDescription>
+                    Below is exactly what the student heard and said during the interaction.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {evaluation.conversation.questionsAsked.map((q, index) => (
-                    <div key={index} className="space-y-4">
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                                <Bot className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-1 rounded-lg border bg-muted p-3">
-                                <p className="text-sm font-semibold">System asked:</p>
-                                <p className="text-muted-foreground">{q.questionText}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/20">
-                                <UserCircle className="h-5 w-5 text-accent-foreground" />
-                            </div>
-                            <div className="flex-1 rounded-lg border bg-background p-3">
-                                <p className="text-sm font-semibold">Student said:</p>
-                                <blockquote className="italic text-muted-foreground">
-                                    "{evaluation.conversation.studentResponses[index]}"
-                                </blockquote>
-                            </div>
-                        </div>
-                    </div>
+                   <Card key={index} className="p-4 bg-background">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           {/* Left Column - Question */}
+                           <div className="rounded-lg bg-muted p-4">
+                               <div className="flex items-start gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
+                                        T
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-muted-foreground">Asked</p>
+                                        <p className="text-sm">{q.questionText}</p>
+                                    </div>
+                               </div>
+                           </div>
+                           {/* Right Column - Answer */}
+                           <div className="rounded-lg bg-white p-4 border">
+                                <div className="flex items-start gap-3">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
+                                            S
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-semibold text-muted-foreground">Student said</p>
+                                            <blockquote className="text-base italic text-foreground">
+                                                "{evaluation.conversation.studentResponses[index]}"
+                                            </blockquote>
+                                        </div>
+                                </div>
+                           </div>
+                       </div>
+                   </Card>
                 ))}
             </CardContent>
         </Card>
@@ -471,6 +476,11 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
               </CardContent>
             </Card>
           )}
+        </div>
+        
+        <div className='flex items-center gap-2 pt-2 text-sm text-muted-foreground'>
+            <Mic className="h-4 w-4" />
+            <p>Confidence: <span className='font-semibold'>{evaluation.evaluation.language.confidence}</span></p>
         </div>
 
         <Accordion type="single" collapsible>
