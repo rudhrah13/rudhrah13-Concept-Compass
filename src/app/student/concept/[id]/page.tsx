@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useEffect, useMemo, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, Check, ThumbsUp, AlertTriangle, Lightbulb, BookOpen, Pencil, Puzzle, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, ThumbsUp, AlertTriangle, Lightbulb, BookOpen, Pencil, Puzzle, X, Sparkles, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -38,34 +39,136 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
   return (
     <div className="space-y-6 mt-6">
       <Separator />
-      <h2 className="text-xl font-semibold text-center text-muted-foreground">AI Conversation Analysis</h2>
+      <h2 className="text-xl font-semibold text-center text-muted-foreground">Understanding Summary</h2>
 
       {/* Status Badge */}
-      <div className="flex justify-center">
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${getStatusColor(feedback.status)}`}>
-          {getStatusIcon(feedback.status)}
-          <span className="font-medium capitalize">{feedback.status.replace('_', ' ')}</span>
-        </div>
+      <Card>
+        <CardContent className="flex items-center justify-center p-4">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-medium ${getStatusColor(feedback.status)}`}>
+            {getStatusIcon(feedback.status)}
+            <span className="capitalize">{feedback.status.replace('_', ' ')}</span>
+            </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Good Job Section */}
+        {feedback.goodJob && (
+          <Card className="border-green-200 bg-green-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-green-800">
+                <ThumbsUp className="h-5 w-5" />
+                What you did well
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-green-900">
+                {feedback.goodJob.bullets.map((bullet: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>{bullet}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Areas to Improve Section */}
+        {feedback.fixThis && (
+           <Card className="border-orange-200 bg-orange-50/50">
+           <CardHeader>
+             <CardTitle className="flex items-center gap-2 text-base font-semibold text-orange-800">
+               <Lightbulb className="h-5 w-5" />
+               What needs improvement
+             </CardTitle>
+           </CardHeader>
+           <CardContent>
+             <ul className="space-y-2 text-sm text-orange-900">
+               {feedback.fixThis.bullets.map((bullet: string, index: number) => (
+                 <li key={index} className="flex items-start gap-2">
+                   <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                   <span>{bullet}</span>
+                 </li>
+               ))}
+             </ul>
+           </CardContent>
+         </Card>
+        )}
       </div>
 
-      {/* Headline */}
-      {feedback.headline && (
+      {/* Clear Explanation */}
+      {feedback.clearExplanation && (
         <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold text-center">{feedback.headline}</h3>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
+              <BookOpen className="h-5 w-5" />
+              Simple explanation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-muted-foreground">{feedback.clearExplanation}</p>
+          </CardContent>
+        </Card>
+      )}
+      
+       {/* Expression Tips */}
+      {feedback.expressionTips && feedback.expressionTips.length > 0 && (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
+                    <Pencil className="h-5 w-5" />
+                    How to explain better
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+                {feedback.expressionTips.map((tip: any, index: number) => (
+                <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium text-primary mb-1">{tip.category}</p>
+                    <p className="text-sm text-muted-foreground">{tip.tip}</p>
+                </div>
+                ))}
+            </CardContent>
+        </Card>
+      )}
+
+
+      {/* Follow-up Questions */}
+      {feedback.followUpQuestions && feedback.followUpQuestions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
+              <BrainCircuit className="h-5 w-5" />
+              Try these next
+            </CardTitle>
+             <CardDescription>
+                You can try answering these to practise the concept.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              {feedback.followUpQuestions.map((question: string, index: number) => (
+                <li key={index} className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-bold">
+                    {index + 1}
+                  </span>
+                  <span>{question}</span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       )}
 
-      {/* Q&A Pairs - Show First */}
+      {/* Q&A Pairs */}
       {feedback.qaPairs && feedback.qaPairs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
               <Puzzle className="h-5 w-5" />
               Conversation Q&A
             </CardTitle>
-            <CardDescription>Questions asked and answers given during the conversation</CardDescription>
+            <CardDescription>Questions asked and your answers during the conversation.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -97,136 +200,9 @@ function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
           </CardContent>
         </Card>
       )}
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Good Job Section */}
-        {feedback.goodJob && (
-          <Card className="border-green-200 bg-green-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-700">
-                <ThumbsUp className="h-5 w-5" />
-                {feedback.goodJob.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {feedback.goodJob.bullets.map((bullet: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Areas to Improve Section */}
-        {feedback.fixThis && (
-          <Card className="border-orange-200 bg-orange-50/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-orange-700">
-                <Lightbulb className="h-5 w-5" />
-                {feedback.fixThis.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {feedback.fixThis.bullets.map((bullet: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Clear Explanation */}
-      {feedback.clearExplanation && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Clear Explanation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed">{feedback.clearExplanation}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Expression Tips */}
-      {feedback.expressionTips && feedback.expressionTips.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Pencil className="h-5 w-5" />
-              Expression Tips
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {feedback.expressionTips.map((tip: any, index: number) => (
-                <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                  <p className="text-sm font-medium text-primary mb-1">{tip.category}</p>
-                  <p className="text-sm">{tip.tip}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Follow-up Questions */}
-      {feedback.followUpQuestions && feedback.followUpQuestions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Puzzle className="h-5 w-5" />
-              Follow-up Questions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {feedback.followUpQuestions.map((question: string, index: number) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm">{question}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
-
-// Mock data, in a real app this would come from an API
-const mockConcept: Concept = {
-  id: 'sci1',
-  name: 'Biology',
-  status: 'In Progress',
-  questions: [
-    'Explain photosynthesis in your own words.',
-    'What happens if sunlight is not available?',
-  ],
-};
-
-
-// #####################################
-
-// #Add it in your env.local
-// NEXT_PUBLIC_VAPI_PUBLIC_KEY=681788e3-c222-489d-8cbb-e8fe9756ef29
-// NEXT_PUBLIC_VAPI_ASSISTANT_ID=9ccfdd2e-b58e-40c5-b518-c5965fec5944
-  
-// ######################################
 
 
 export default function ConceptPage() {
@@ -425,3 +401,5 @@ export default function ConceptPage() {
     </div>
   );
 }
+
+    
