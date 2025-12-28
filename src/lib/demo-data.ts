@@ -187,9 +187,8 @@ export function initializeDemoData() {
     if (!localStorage.getItem('concepts')) {
       localStorage.setItem('concepts', JSON.stringify(defaultConcepts));
     }
-    if (!localStorage.getItem('evaluations')) {
-      localStorage.setItem('evaluations', JSON.stringify(defaultEvaluations));
-    }
+    // Always overwrite evaluations to ensure the latest data structure
+    localStorage.setItem('evaluations', JSON.stringify(defaultEvaluations));
   }
 }
 
