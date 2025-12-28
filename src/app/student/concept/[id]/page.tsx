@@ -23,6 +23,16 @@ const mockConcept: Concept = {
   ],
 };
 
+
+// #####################################
+
+// #Add it in your env.local
+// NEXT_PUBLIC_VAPI_PUBLIC_KEY=681788e3-c222-489d-8cbb-e8fe9756ef29
+// NEXT_PUBLIC_VAPI_ASSISTANT_ID=9ccfdd2e-b58e-40c5-b518-c5965fec5944
+  
+// ######################################
+
+
 export default function ConceptPage() {
   const params = useParams();
   const id = params.id as string;
