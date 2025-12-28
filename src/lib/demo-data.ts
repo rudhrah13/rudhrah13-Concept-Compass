@@ -87,14 +87,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     "date": "2025-01-12",
     "conversation": {
       "questionsAsked": [
-        {
-          "questionType": "explain",
-          "questionText": "Can you tell me how a plant makes its food?"
-        },
-        {
-          "questionType": "probe",
-          "questionText": "Apart from sunlight, what else does a plant need?"
-        }
+        { "questionType": "explain", "questionText": "Can you tell me how a plant makes its food?" },
+        { "questionType": "probe", "questionText": "Apart from sunlight, what else does a plant need?" }
       ],
       "studentResponses": [
         "Plants make food using sunlight in their leaves.",
@@ -103,12 +97,13 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Partial",
-      "strength": "Student correctly identified sunlight as essential for food preparation.",
-      "gap": "Student did not mention the use of water and air in making food.",
-      "language": {
-        "clarity": "Average",
-        "confidence": "Medium"
-      }
+      "strength": "You correctly identified sunlight as essential for food preparation.",
+      "gap": "You did not mention the use of water and air in making food.",
+      "language": { "clarity": "Average", "confidence": "Medium" },
+      "nextSteps": [
+          "Try explaining how water and air help plants make food.",
+          "Think about where plants get water from and how air reaches the leaves."
+      ]
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
@@ -119,14 +114,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     "date": "2025-01-12",
      "conversation": {
       "questionsAsked": [
-        {
-          "questionType": "explain",
-          "questionText": "Can you explain how plants get their food?"
-        },
-        {
-          "questionType": "misconception",
-          "questionText": "Interesting. So do plants 'eat' the soil?"
-        }
+        { "questionType": "explain", "questionText": "Can you explain how plants get their food?" },
+        { "questionType": "misconception", "questionText": "Interesting. So do plants 'eat' the soil?" }
       ],
       "studentResponses": [
         "Plants get their food from the soil. They have roots that eat the soil.",
@@ -135,12 +124,13 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Weak",
-      "strength": "Student understands that roots are important for the plant.",
-      "gap": "Student has a misconception that plants 'eat' soil for food, rather than absorbing water and nutrients from it.",
-      "language": {
-        "clarity": "Low",
-        "confidence": "Low"
-      }
+      "strength": "You understand that roots are important for the plant.",
+      "gap": "You have a misconception that plants 'eat' soil for food, rather than absorbing water and nutrients from it.",
+      "language": { "clarity": "Low", "confidence": "Low" },
+      "nextSteps": [
+          "Listen again to the correct explanation of how plants make their own food.",
+          "Try explaining step-by-step how a plant gets its energy, starting from the sun."
+      ]
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
@@ -151,14 +141,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     "date": "2025-01-13",
      "conversation": {
       "questionsAsked": [
-        {
-          "questionType": "explain",
-          "questionText": "Can you tell me how a plant makes its food?"
-        },
-        {
-          "questionType": "follow-up",
-          "questionText": "That's great. What is the name of the gas plants take from the air?"
-        }
+        { "questionType": "explain", "questionText": "Can you tell me how a plant makes its food?" },
+        { "questionType": "follow-up", "questionText": "That's great. What is the name of the gas plants take from the air?" }
       ],
       "studentResponses": [
         "Plants make food in their leaves. They need sunlight, water from the roots, and air.",
@@ -167,12 +151,9 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Strong",
-      "strength": "Clearly explained the roles of sunlight, water, and CO2, and mentioned the byproduct oxygen.",
+      "strength": "You clearly explained the roles of sunlight, water, and CO2, and mentioned the byproduct oxygen.",
       "gap": "None",
-      "language": {
-        "clarity": "High",
-        "confidence": "High"
-      }
+      "language": { "clarity": "High", "confidence": "High" }
     },
     "correctExplanation": "Plants prepare their own food in the leaves using sunlight, water, and carbon dioxide. Soil does not give food, it only provides water and minerals. This process is called photosynthesis."
   },
@@ -183,14 +164,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     "date": "2025-01-14",
     "conversation": {
       "questionsAsked": [
-        {
-          "questionType": "explain",
-          "questionText": "What happens to water in a puddle on a hot, sunny day?"
-        },
-        {
-          "questionType": "probe",
-          "questionText": "Where does the water go? Does it just disappear?"
-        }
+        { "questionType": "explain", "questionText": "What happens to water in a puddle on a hot, sunny day?" },
+        { "questionType": "probe", "questionText": "Where does the water go? Does it just disappear?" }
       ],
       "studentResponses": [
         "The water in the puddle dries up.",
@@ -199,12 +174,13 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Partial",
-      "strength": "Student correctly observed that water 'dries up' and 'goes into the air' due to heat.",
-      "gap": "Could not name or fully define the process of evaporation.",
-      "language": {
-        "clarity": "High",
-        "confidence": "Medium"
-      }
+      "strength": "You correctly observed that water 'dries up' and 'goes into the air' due to heat.",
+      "gap": "You could not name or fully define the process of evaporation.",
+      "language": { "clarity": "High", "confidence": "Medium" },
+      "nextSteps": [
+          "Practice using the word 'evaporation' to describe what happens to water when it gets hot.",
+          "Try explaining the water cycle to a friend or family member."
+      ]
     },
     "correctExplanation": "Evaporation is the process where a liquid, like water, turns into a gas or vapor. On a hot day, the sun's energy causes water molecules to move faster and escape into the air as water vapor."
   },
@@ -215,14 +191,8 @@ const defaultEvaluations: DemoEvaluation[] = [
     "date": "2025-01-15",
     "conversation": {
       "questionsAsked": [
-        {
-          "questionType": "explain",
-          "questionText": "Can you name the main parts of a plant?"
-        },
-        {
-          "questionType": "probe",
-          "questionText": "What about the part that makes food? What is it called?"
-        }
+        { "questionType": "explain", "questionText": "Can you name the main parts of a plant?" },
+        { "questionType": "probe", "questionText": "What about the part that makes food? What is it called?" }
       ],
       "studentResponses": [
         "A plant has roots, a stem, and flowers.",
@@ -231,12 +201,9 @@ const defaultEvaluations: DemoEvaluation[] = [
     },
     "evaluation": {
       "understanding": "Strong",
-      "strength": "Student correctly identified all major parts of a plant.",
-      "gap": "Initially missed 'leaves' but self-corrected upon prompting.",
-      "language": {
-        "clarity": "High",
-        "confidence": "High"
-      }
+      "strength": "You correctly identified all major parts of a plant and even self-corrected.",
+      "gap": "None",
+      "language": { "clarity": "High", "confidence": "High" }
     },
     "correctExplanation": "The main parts of a plant are the roots, which anchor the plant and absorb water; the stem, which supports the plant; the leaves, which perform photosynthesis; and the flowers, which are involved in reproduction."
   }

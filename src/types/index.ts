@@ -135,7 +135,8 @@ export interface DemoEvaluation {
     language: {
       clarity: string;
       confidence: string;
-    }
+    },
+    nextSteps?: string[];
   },
   correctExplanation: string;
 }

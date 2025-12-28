@@ -12,7 +12,8 @@ import {
   X,
   AlertTriangle,
   MessageSquare,
-  Mic
+  Mic,
+  Sparkles
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -67,7 +68,7 @@ export default function FeedbackPage() {
 
             if (studentEvaluation) {
                 const concept = getConcepts().find(c => c.conceptId === id);
-                setConceptName(concept?.chapter || 'Unknown Concept');
+                setConceptName(concept?.conceptName || 'Unknown Concept');
             }
             
         } catch (e) {
@@ -212,6 +213,24 @@ export default function FeedbackPage() {
           )}
         </div>
         
+        {evaluation.evaluation.nextSteps && evaluation.evaluation.nextSteps.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary">
+                        <Sparkles className="h-5 w-5" />
+                        What you can do next
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="text-muted-foreground">
+                    <ul className="list-disc list-inside space-y-2">
+                        {evaluation.evaluation.nextSteps.map((step, i) => (
+                            <li key={i}>{step}</li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+        )}
+
         <div className='flex items-center gap-2 pt-2 text-sm text-muted-foreground'>
             <Mic className="h-4 w-4" />
             <p>Confidence: <span className='font-semibold'>{evaluation.evaluation.language.confidence}</span></p>

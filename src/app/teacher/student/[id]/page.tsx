@@ -406,10 +406,10 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
                         {/* Question Block */}
                         <div className="flex items-start gap-3">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
-                                T
+                                AI
                             </div>
                             <div className="flex-1">
-                                <p className="text-xs font-semibold text-muted-foreground">Asked</p>
+                                <p className="text-xs font-semibold text-muted-foreground">AI asked</p>
                                 <p className="text-sm">{q.questionText}</p>
                             </div>
                         </div>
@@ -458,7 +458,7 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
               <CardContent className="p-3 pt-0 text-green-900">
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{evaluation.evaluation.strength}</span>
+                  <span>{evaluation.evaluation.strength.replace('Student', 'The student')}</span>
                 </p>
               </CardContent>
             </Card>
@@ -474,13 +474,31 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
               <CardContent className="p-3 pt-0 text-yellow-900">
                 <p className="flex items-start gap-2">
                   <X className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{evaluation.evaluation.gap}</span>
+                  <span>{evaluation.evaluation.gap.replace('Student', 'The student')}</span>
                 </p>
               </CardContent>
             </Card>
           )}
         </div>
         
+        {evaluation.evaluation.nextSteps && evaluation.evaluation.nextSteps.length > 0 && (
+            <Card className="border-blue-200 bg-blue-50/50">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base font-semibold text-blue-800">
+                        <Sparkles className="h-5 w-5" />
+                        Suggested focus areas for this student
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="text-blue-900">
+                    <ul className="list-disc list-inside space-y-2">
+                        {evaluation.evaluation.nextSteps.map((step, i) => (
+                            <li key={i}>{step}</li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+        )}
+
         <div className='flex items-center gap-2 pt-2 text-sm text-muted-foreground'>
             <Mic className="h-4 w-4" />
             <p>Confidence: <span className='font-semibold'>{evaluation.evaluation.language.confidence}</span></p>
