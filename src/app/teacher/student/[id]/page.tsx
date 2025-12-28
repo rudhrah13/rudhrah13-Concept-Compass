@@ -402,36 +402,34 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
             </CardHeader>
             <CardContent className="space-y-4">
                 {evaluation.conversation.questionsAsked.map((q, index) => (
-                   <Card key={index} className="p-4 bg-background">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           {/* Left Column - Question */}
-                           <div className="rounded-lg bg-muted p-4">
-                               <div className="flex items-start gap-3">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
-                                        T
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs font-semibold text-muted-foreground">Asked</p>
-                                        <p className="text-sm">{q.questionText}</p>
-                                    </div>
-                               </div>
-                           </div>
-                           {/* Right Column - Answer */}
-                           <div className="rounded-lg bg-white p-4 border">
-                                <div className="flex items-start gap-3">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
-                                            S
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-semibold text-muted-foreground">Student said</p>
-                                            <blockquote className="text-base italic text-foreground">
-                                                "{evaluation.conversation.studentResponses[index]}"
-                                            </blockquote>
-                                        </div>
+                   <div key={index} className="space-y-2">
+                        {/* Question Block */}
+                        <div className="rounded-lg bg-muted p-4 border">
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
+                                    T
                                 </div>
-                           </div>
-                       </div>
-                   </Card>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-muted-foreground">Asked</p>
+                                    <p className="text-sm">{q.questionText}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Answer Block */}
+                        <div className="ml-4 md:ml-10 rounded-lg bg-blue-50 p-4 border border-blue-100">
+                             <div className="flex items-start gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
+                                    S
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-semibold text-blue-800">Student said</p>
+                                    <blockquote className="text-sm italic text-blue-900">
+                                        "{evaluation.conversation.studentResponses[index]}"
+                                    </blockquote>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
                 ))}
             </CardContent>
         </Card>
