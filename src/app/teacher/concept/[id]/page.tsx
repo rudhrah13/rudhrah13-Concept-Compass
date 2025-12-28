@@ -213,22 +213,22 @@ export default function ConceptOverviewPage() {
                             {concept.studentAttempts.map((student) => (
                                 <TableRow key={student.studentId} className="group">
                                     <TableCell className="font-medium p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
                                             {student.studentName} ({student.rollNumber})
                                         </Link>
                                     </TableCell>
                                     <TableCell className="p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
                                             {getUnderstandingBadge(student.understanding)}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center p-4 h-full">
                                             {student.keyIssue}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-right p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
                                             <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                                         </Link>
                                     </TableCell>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams, useParams } from 'next/navigation';
+import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import {
   Activity,
   AlertTriangle,
@@ -21,6 +21,7 @@ import {
   User,
   X,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -29,7 +30,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { StudentProfile, UnderstandingLevel, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
-import { featureFlags } from '@/lib/feature-flags';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
 
@@ -46,53 +46,38 @@ const getUnderstandingBadge = (level: UnderstandingLevel) => {
     }
 }
 
-const getConfidenceIndicator = (confidence: string | undefined) => {
-    switch (confidence?.toLowerCase()) {
-        case 'high':
-            return <><Smile className="h-4 w-4 text-green-600" /> High confidence</>;
-        case 'medium':
-            return <><Meh className="h-4 w-4 text-yellow-600" /> Medium confidence</>;
-        case 'low':
-            return <><Frown className="h-4 w-4 text-red-600" /> Low confidence</>;
-        default:
-            return null;
-    }
-};
-
 export default function TeacherStudentOverviewPage() {
     useProtectedRoute('teacher');
     const searchParams = useSearchParams();
     const params = useParams();
     const studentId = params.id as string;
-    const conceptId = searchParams.get('concept');
-    
+    const fromConceptId = searchParams.get('fromConcept');
+    const showFeedback = searchParams.get('showFeedback');
+
     useEffect(() => {
         initializeDemoData();
     }, []);
 
-    if (conceptId) {
-        return <StudentConceptFeedbackView studentId={studentId} conceptId={conceptId} />;
+    // If showFeedback is true, render the detailed feedback view for the concept.
+    if (showFeedback && fromConceptId) {
+        return <StudentConceptFeedbackView studentId={studentId} conceptId={fromConceptId} />;
     }
     
-    if (featureFlags.ENABLE_STUDENT_PROFILE) {
-        return <StudentProfileView studentId={studentId} />;
-    }
-    
-    // Fallback if profile is disabled
-    return (
-        <div className="container mx-auto py-10 text-center">
-            <p>Student profiles are not enabled.</p>
-            <Button asChild variant="link">
-                <Link href="/teacher/dashboard">Back to Dashboard</Link>
-            </Button>
-        </div>
-    );
+    // Otherwise, show the main student profile view.
+    return <StudentProfileView studentId={studentId} fromConceptId={fromConceptId} />;
 }
 
-function StudentProfileView({ studentId }: { studentId: string }) {
+function StudentProfileView({ studentId, fromConceptId }: { studentId: string, fromConceptId: string | null }) {
     const [student, setStudent] = useState<StudentProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+
+    const fromConcept = fromConceptId ? getConcepts().find(c => c.conceptId === fromConceptId) : null;
+    const fromConceptEvaluation = fromConceptId ? getEvaluations().find(e => e.studentId === studentId && e.conceptId === fromConceptId) : null;
+
+    const backUrl = fromConceptId ? `/teacher/concept/${fromConceptId}` : '/teacher/dashboard?tabs=students';
+    const backText = fromConceptId ? 'Back to Concept Overview' : 'Back to Student List';
 
     const fetchData = () => {
         setLoading(true);
@@ -187,8 +172,8 @@ function StudentProfileView({ studentId }: { studentId: string }) {
     return (
         <div className="container mx-auto max-w-4xl py-6 sm:py-8">
             <Button asChild variant="outline" size="sm" className="mb-4">
-                <Link href="/teacher/dashboard?tabs=students">
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student List
+                <Link href={backUrl}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> {backText}
                 </Link>
             </Button>
 
@@ -203,6 +188,35 @@ function StudentProfileView({ studentId }: { studentId: string }) {
             </header>
 
             <div className="space-y-6">
+
+                {fromConcept && (
+                    <Card className="bg-blue-50 border-blue-200">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-blue-800"><Sparkles className="w-5 h-5" />Concept in Context</CardTitle>
+                            <CardDescription>You are viewing this student's profile in the context of the '{fromConcept.chapter}' concept.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {fromConceptEvaluation ? (
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-background border">
+                                    <div className='space-y-1'>
+                                        <p className="font-semibold">{fromConcept.chapter}</p>
+                                        <div className='flex items-center gap-2'>
+                                            <span className="text-sm text-muted-foreground">Status:</span>
+                                            {getUnderstandingBadge(fromConceptEvaluation.evaluation.understanding)}
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => router.push(`/teacher/student/${studentId}?fromConcept=${fromConceptId}&showFeedback=true`)}>
+                                        View Detailed Feedback
+                                    </Button>
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground text-sm">This student has not yet attempted the '{fromConcept.chapter}' concept.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />Overall Snapshot</CardTitle>
@@ -230,7 +244,7 @@ function StudentProfileView({ studentId }: { studentId: string }) {
                     <CardContent>
                          <div className="flex flex-col gap-3">
                             {student.recentConcepts.length > 0 ? student.recentConcepts.map(concept => (
-                                <Link key={concept.id} href={`/teacher/student/${studentId}?concept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
+                                <Link key={concept.id} href={`/teacher/student/${studentId}?fromConcept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
                                     <div>
                                         <p className="font-medium">{concept.name}</p>
                                         <p className="text-sm text-muted-foreground">{concept.date}</p>
@@ -362,13 +376,8 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
       <div className="flex justify-between items-center mb-4">
         <Button asChild variant="outline" size="sm">
-            <Link href={`/teacher/student/${student.studentId}`}>
+            <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Student Profile
-            </Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-            <Link href={`/teacher/concept/${conceptId}`}>
-             Back to Concept Overview
             </Link>
         </Button>
       </div>
