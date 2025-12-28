@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { startTeachingCall, vapi, waitForOutput } from '@/lib/vapi';
-import type { Concept, StudentAttempt } from '@/types';
+import type { Concept, StudentAttempt, DemoConcept } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { initializeDemoData, getConcepts } from '@/lib/demo-data';
+
 
 // VAPI Feedback Display Component
 function VapiFeedbackDisplay({ feedback }: { feedback: any }) {
@@ -232,6 +234,7 @@ export default function ConceptPage() {
   const id = params.id as string;
   useProtectedRoute('student');
   const router = useRouter();
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const [conceptData, setConceptData] = useState<DemoConcept | null>(null);
   const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
@@ -240,8 +243,6 @@ export default function ConceptPage() {
   // States from previous implementation that are not fully wired up but kept for structure
   const [sessionState, setSessionState] = useState<'idle' | 'recording' | 'paused' | 'processing' | 'waitingForAI' | 'submitting' | 'error' | 'denied'>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [conceptData, setConceptData] = useState<Concept | null>(null);
-  const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
   const [studentName, setStudentName] = useState<string>('');
   const [callId, setCallId] = useState<string | null>(null);
   const [isWaitingForResult, setIsWaitingForResult] = useState(false);
@@ -324,7 +325,7 @@ export default function ConceptPage() {
       }
       vapi.removeAllListeners();
     };
-  }, [callId]);
+  }, [callId, status]);
 
 
   const startCall = async () => {
@@ -372,8 +373,8 @@ export default function ConceptPage() {
       </Button>
 
       <header className="mb-8">
-        <p className="text-lg font-semibold text-primary">{conceptData.conceptName}</p>
-        <h1 className="text-3xl font-bold">Explain the idea in your own words.</h1>
+        <p className="text-lg font-semibold text-primary">{conceptData.chapter}</p>
+        <h1 className="text-3xl font-bold">Explain the idea in your own words: {conceptData.conceptName}</h1>
         <p className="text-muted-foreground mt-2">This is not an exam.</p>
       </header>
 
@@ -385,7 +386,7 @@ export default function ConceptPage() {
               <p>Interact with the AI assistant to understand the concept.</p>
               <div className="text-sm text-muted-foreground">
                 <p><strong>Student:</strong> {studentName}</p>
-                <p><strong>Topic:</strong> {conceptData.name}</p>
+                <p><strong>Topic:</strong> {conceptData.conceptName}</p>
               </div>
             </div>
           </CardDescription>
