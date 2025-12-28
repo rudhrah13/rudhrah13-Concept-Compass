@@ -7,14 +7,9 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <main className="flex-1">
-        <section className="relative flex flex-col items-center justify-center text-center py-20 md:py-32 lg:py-40 overflow-hidden">
-          <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem]">
-            <div className="absolute bottom-0 left-0 right-0 top-0 bg-[radial-gradient(circle_800px_at_100%_200px,#d5e5ff,transparent)]"></div>
-          </div>
-          <div className="container z-10 px-4">
-            <div className="inline-block p-4 bg-primary/10 rounded-full mb-4">
-              <Compass className="w-16 h-16 text-primary" />
-            </div>
+        <section className="flex flex-col items-center justify-center text-center py-20 md:py-32 lg:py-40">
+          <div className="container px-4">
+            <Compass className="w-20 h-20 text-primary mx-auto mb-4" />
             <h1 className="text-4xl md:text-5xl font-bold text-primary">Concept Compass</h1>
             <p className="text-lg md:text-xl text-muted-foreground mt-2 max-w-2xl mx-auto">
               Understand concepts clearly, before exams.
@@ -30,30 +25,31 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-16 bg-muted/30">
+        <section className="py-16 bg-muted/50">
             <div className="container px-4">
+                <h2 className="text-3xl font-bold text-center mb-8">How it helps</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                    <div className="flex flex-col items-center p-4">
-                        <div className="p-3 bg-primary/10 rounded-full mb-3">
-                            <Mic className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-1">Explain by Speaking</h3>
-                        <p className="text-muted-foreground text-sm">Use your voice to explain concepts naturally, just like in a classroom.</p>
-                    </div>
-                    <div className="flex flex-col items-center p-4">
-                        <div className="p-3 bg-primary/10 rounded-full mb-3">
-                            <Lightbulb className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-1">Know What You Know</h3>
-                        <p className="text-muted-foreground text-sm">Get instant, private feedback to see what you've mastered and where you can improve.</p>
-                    </div>
-                    <div className="flex flex-col items-center p-4">
-                        <div className="p-3 bg-primary/10 rounded-full mb-3">
-                            <Users className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-lg font-semibold mb-1">Help Teachers Help You</h3>
-                        <p className="text-muted-foreground text-sm">Provide teachers with insights on common gaps, so they know what to focus on in class.</p>
-                    </div>
+                    <Card>
+                        <CardContent className="p-6">
+                            <Mic className="w-12 h-12 text-primary mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-2">Explain by Speaking</h3>
+                            <p className="text-muted-foreground">Use your voice to explain concepts naturally, just like in a classroom.</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <Lightbulb className="w-12 h-12 text-primary mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-2">Know What You Know</h3>
+                            <p className="text-muted-foreground">Get instant, private feedback to see what you've mastered and where you can improve.</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <Users className="w-12 h-12 text-primary mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold mb-2">Help Teachers Help You</h3>
+                            <p className="text-muted-foreground">Provide teachers with insights on common gaps, so they know what to focus on in class.</p>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </section>
