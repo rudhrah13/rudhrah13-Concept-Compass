@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -106,6 +107,9 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
 
             const sortedGaps = Object.keys(gapCounts).sort((a, b) => gapCounts[b] - gapCounts[a]);
             const repeatedIssue = sortedGaps.length > 0 ? sortedGaps[0] : 'No specific repeated issues found.';
+            
+            // Filter out the current concept if we are in that context
+            const otherConcepts = studentEvaluations.filter(e => e.conceptId !== fromConceptId);
 
             const profile: StudentProfile = {
                 id: studentData.studentId,
@@ -124,7 +128,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                     'Encourage oral explanation for concepts.',
                     'Suggest using shorter, simpler sentences.',
                 ],
-                recentConcepts: studentEvaluations
+                recentConcepts: otherConcepts
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .map(e => {
                         const concept = allConcepts.find(c => c.conceptId === e.conceptId);
@@ -145,7 +149,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
         }, 500);
     };
 
-    useEffect(fetchData, [studentId]);
+    useEffect(fetchData, [studentId, fromConceptId]);
 
     if (loading) {
         return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading student profile...</div>;
@@ -239,7 +243,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Concept Attempts</CardTitle>
+                        <CardTitle>Other Concept Attempts</CardTitle>
                     </CardHeader>
                     <CardContent>
                          <div className="flex flex-col gap-3">
@@ -255,7 +259,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                                     </div>
 
                                 </Link>
-                            )) : <p className="text-muted-foreground text-center py-4">No recent attempts found.</p>}
+                            )) : <p className="text-muted-foreground text-center py-4">No other concepts attempted yet.</p>}
                         </div>
                     </CardContent>
                 </Card>
@@ -525,3 +529,4 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     </div>
   );
 }
+
