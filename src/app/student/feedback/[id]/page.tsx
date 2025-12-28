@@ -9,19 +9,16 @@ import {
   Check,
   Lightbulb,
   Loader2,
-  Pencil,
-  Puzzle,
-  ThumbsUp,
   X,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { StudentAttempt, UnderstandingLevel, DemoEvaluation } from '@/types';
-import { featureFlags } from '@/lib/feature-flags';
+import type { UnderstandingLevel, DemoEvaluation } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { getEvaluations, getConcepts, initializeDemoData } from '@/lib/demo-data';
 
@@ -42,7 +39,9 @@ export default function FeedbackPage() {
   const params = useParams();
   const id = params.id as string; // This is the conceptId
   useProtectedRoute('student');
-  const [attempt, setAttempt] = useState<StudentAttempt | null>(null);
+  
+  const [evaluation, setEvaluation] = useState<DemoEvaluation | null>(null);
+  const [conceptName, setConceptName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,39 +62,19 @@ export default function FeedbackPage() {
             const allEvaluations: DemoEvaluation[] = getEvaluations();
             const studentEvaluation = allEvaluations.find(e => e.studentId === studentId && e.conceptId === id);
             
-            if (!studentEvaluation) {
-                // No attempt found for this concept by this student
-                setAttempt(null);
-                setLoading(false);
-                return;
+            setEvaluation(studentEvaluation || null);
+
+            if (studentEvaluation) {
+                const concept = getConcepts().find(c => c.conceptId === id);
+                setConceptName(concept?.chapter || 'Unknown Concept');
             }
-
-            const concept = getConcepts().find(c => c.conceptId === id);
-
-            // Transform DemoEvaluation to StudentAttempt
-            const studentAttempt: StudentAttempt = {
-                conceptName: concept?.chapter || 'Unknown Concept',
-                questions: ['Explain the concept in your own words.'], // Placeholder as this is not in schema
-                studentAnswers: ['Your recorded answer.'], // Placeholder as this is not in schema
-                feedback: {
-                    understandingLevel: studentEvaluation.evaluation.understanding,
-                    strength: studentEvaluation.evaluation.strength,
-                    gap: studentEvaluation.evaluation.gap,
-                    languageFeedback: {
-                        clarity: studentEvaluation.evaluation.language.clarity,
-                    },
-                    // This is missing in the new schema, so we create a generic one
-                    correctExplanation: `A correct explanation for ${concept?.chapter || 'this concept'} would detail the key processes and components involved.`,
-                },
-            };
             
-            setAttempt(studentAttempt);
         } catch (e) {
             setError("Failed to load feedback.");
         } finally {
             setLoading(false);
         }
-    }, 1000);
+    }, 500);
   };
 
   useEffect(() => {
@@ -115,10 +94,10 @@ export default function FeedbackPage() {
     );
   }
 
-  if (!attempt) {
+  if (!evaluation) {
     return (
       <div className="container mx-auto py-10 text-center">
-        <p>Feedback will appear after the student completes this concept.</p>
+        <p>Your feedback will appear here after you complete the concept.</p>
          <Button asChild variant="outline" size="sm" className="mt-4">
             <Link href="/student/dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Concepts
@@ -128,8 +107,7 @@ export default function FeedbackPage() {
     );
   }
 
-  const summary = getUnderstandingSummary(attempt.feedback.understandingLevel);
-  const showLanguageFeedback = featureFlags.ENABLE_LANGUAGE_FEEDBACK && attempt.feedback.languageFeedback;
+  const summary = getUnderstandingSummary(evaluation.evaluation.understanding);
 
   return (
     <div className="container mx-auto max-w-4xl py-6 sm:py-8">
@@ -140,31 +118,51 @@ export default function FeedbackPage() {
       </Button>
       
       <header className="mb-6">
-        <h1 className="text-3xl font-bold">Feedback for {attempt.conceptName}</h1>
-        <p className="text-muted-foreground">Review your answers and the AI-generated feedback below.</p>
+        <h1 className="text-3xl font-bold">Feedback for {conceptName}</h1>
+        <p className="text-muted-foreground">Review your conversation and the AI-generated feedback below.</p>
       </header>
 
       <div className="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>Your Submission</CardTitle>
-                <CardDescription>The questions you were asked and the answers you provided.</CardDescription>
+                <CardTitle className="flex items-center gap-2"><MessageSquare />Your Conversation</CardTitle>
+                <CardDescription>
+                    Below is exactly what you heard and said during the interaction.
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {attempt.questions.map((question, index) => (
-                    <div key={index}>
-                        <p className="font-semibold text-primary">{question}</p>
-                        <blockquote className="mt-2 border-l-2 pl-4 italic text-muted-foreground">
-                            {attempt.studentAnswers[index]}
-                        </blockquote>
-                    </div>
+                {evaluation.conversation.questionsAsked.map((q, index) => (
+                   <div key={index} className="rounded-lg border bg-background p-4 space-y-4">
+                        {/* Question Block */}
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 font-semibold text-sm">
+                                AI
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs font-semibold text-muted-foreground">The AI asked</p>
+                                <p className="text-sm">{q.questionText}</p>
+                            </div>
+                        </div>
+                        {/* Answer Block */}
+                        <div className="flex items-start gap-3 ml-4 md:ml-10">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-primary font-semibold text-sm">
+                                You
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs font-semibold text-blue-800">You said</p>
+                                <blockquote className="text-sm italic text-blue-900">
+                                    "{evaluation.conversation.studentResponses[index]}"
+                                </blockquote>
+                            </div>
+                        </div>
+                   </div>
                 ))}
             </CardContent>
         </Card>
         
         <Separator />
         
-        <h2 className="text-xl font-semibold text-center text-muted-foreground pt-2">AI Generated Feedback</h2>
+        <h2 className="text-xl font-semibold text-center text-muted-foreground pt-2">AI Feedback</h2>
 
         {/* Section 1: Understanding Summary */}
         <Card>
@@ -174,69 +172,46 @@ export default function FeedbackPage() {
               <span className="font-semibold text-lg">{summary.text} {summary.emoji}</span>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-              <span>{attempt.feedback.understandingLevel === 'Strong' ? 'Clear' : attempt.feedback.understandingLevel === 'Partial' ? 'Almost there' : 'Needs work'}</span>
+              <span>{evaluation.evaluation.understanding === 'Strong' ? 'Clear' : evaluation.evaluation.understanding === 'Partial' ? 'Almost there' : 'Needs work'}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Section 2: Concept Feedback */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {attempt.feedback.strength && (
+          {evaluation.evaluation.strength && (
             <Card className="border-green-200 bg-green-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
-                <ThumbsUp className="h-5 w-5 text-green-600" />
+                <Check className="h-5 w-5 text-green-600" />
                 <CardTitle className="text-base font-semibold text-green-800">
-                  Good job
+                  What you did well
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 text-green-900">
-                <p className="flex items-start gap-2">
-                  <Check className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.strength}</span>
+                <p>
+                  {evaluation.evaluation.strength}
                 </p>
               </CardContent>
             </Card>
           )}
-          {attempt.feedback.gap && (
+          {evaluation.evaluation.gap && (
             <Card className="border-yellow-200 bg-yellow-50/50">
               <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-3">
                 <Lightbulb className="h-5 w-5 text-yellow-600" />
                 <CardTitle className="text-base font-semibold text-yellow-800">
-                  Fix this
+                  What to focus on
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0 text-yellow-900">
-                <p className="flex items-start gap-2">
-                  <X className="mt-1 h-4 w-4 flex-shrink-0" />
-                  <span>{attempt.feedback.gap}</span>
+                <p>
+                  {evaluation.evaluation.gap}
                 </p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Section 3: Expression Tips */}
-        {showLanguageFeedback && (attempt.feedback.languageFeedback?.clarity) && (
-          <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-base font-semibold">
-                Expression Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0 text-sm text-muted-foreground">
-              {attempt.feedback.languageFeedback.clarity && (
-                <div className="flex items-start gap-3">
-                  <Puzzle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <p>
-                    Sentence clarity: {attempt.feedback.languageFeedback.clarity}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Section 4: Correct Explanation */}
+        {/* Section 3: Correct Explanation */}
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1" className="border-b-0">
             <Card className="p-0">
@@ -248,17 +223,17 @@ export default function FeedbackPage() {
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
                 <p className="text-muted-foreground">
-                  {attempt.feedback.correctExplanation}
+                  {evaluation.correctExplanation}
                 </p>
               </AccordionContent>
             </Card>
           </AccordionItem>
         </Accordion>
 
-        {/* Section 5: Action Button */}
+        {/* Section 4: Action Button */}
         <div className="text-center pt-4">
           <Button asChild variant="default">
-            <Link href="/student/dashboard">Try this concept again later</Link>
+            <Link href={`/student/concept/${id}`}>Try this concept again later</Link>
           </Button>
         </div>
       </div>
