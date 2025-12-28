@@ -10,66 +10,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import type { Concept, Chapter, ConceptStatus } from '@/types';
+import type { Concept, Chapter, ConceptStatus, DemoConcept, DemoEvaluation } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
-
-
-const mockChapters: Chapter[] = [
-  {
-    id: 'chapter1',
-    title: 'Plants & Life Processes',
-    icon: '🌿',
-    concepts: [
-      { id: 'sci1', name: 'Photosynthesis', status: 'Feedback Available' },
-      { id: 'sci2', name: 'Role of sunlight, water, air', status: 'Not Started' },
-      { id: 'sci3', name: 'Respiration in plants', status: 'In Progress' },
-      { id: 'sci4', name: 'Seed germination', status: 'Not Started' },
-    ],
-  },
-  {
-    id: 'chapter2',
-    title: 'Animals & Human Body',
-    icon: '🐾',
-    concepts: [
-      { id: 'sci5', name: 'Digestive system', status: 'Feedback Available' },
-      { id: 'sci6', name: 'Breathing vs respiration', status: 'Not Started' },
-      { id: 'sci7', name: 'Circulatory system', status: 'In Progress' },
-      { id: 'sci8', name: 'Animal adaptations', status: 'Not Started' },
-    ],
-  },
-  {
-    id: 'chapter3',
-    title: 'Materials & Changes',
-    icon: '🧪',
-    concepts: [
-      { id: 'sci9', name: 'States of matter', status: 'Feedback Available' },
-      { id: 'sci10', name: 'Reversible vs irreversible changes', status: 'Not Started' },
-      { id: 'sci11', name: 'Properties of materials', status: 'In Progress' },
-    ],
-  },
-  {
-    id: 'chapter4',
-    title: 'Energy, Light & Sound',
-    icon: '⚡',
-    concepts: [
-      { id: 'sci12', name: 'Sources of energy', status: 'Not Started' },
-      { id: 'sci13', name: 'Light and shadows', status: 'Feedback Available' },
-      { id: 'sci14', name: 'Transparent / translucent / opaque', status: 'Not Started' },
-      { id: 'sci15', name: 'Sound production', status: 'In Progress' },
-    ],
-  },
-  {
-    id: 'chapter5',
-    title: 'Earth, Water & Environment',
-    icon: '🌍',
-    concepts: [
-      { id: 'sci16', name: 'Water cycle', status: 'Feedback Available' },
-      { id: 'sci17', name: 'Soil types and uses', status: 'Not Started' },
-      { id: 'sci18', name: 'Natural resources', status: 'In Progress' },
-      { id: 'sci19', name: 'Pollution and prevention', status: 'Not Started' },
-    ],
-  },
-];
+import { getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
 
 
 const getStatusStyles = (status: ConceptStatus) => {
@@ -105,27 +48,87 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      // To test error state: setError("Failed to load concepts."); setLoading(false); return;
-      setChapters(mockChapters);
-      setLoading(false);
-    }, 1000);
+    // Initialize and load data from localStorage
+    initializeDemoData();
+    const studentId = localStorage.getItem('studentId');
+    if (!studentId) {
+        setError("Student not found. Please log in again.");
+        setLoading(false);
+        return;
+    }
+
+    try {
+        const allConcepts: DemoConcept[] = getConcepts();
+        const allEvaluations: DemoEvaluation[] = getEvaluations();
+        const studentEvaluations = allEvaluations.filter(e => e.studentId === studentId);
+
+        const conceptsWithStatus: Concept[] = allConcepts.map(c => {
+            const evaluation = studentEvaluations.find(e => e.conceptId === c.conceptId);
+            let status: ConceptStatus = 'Not Started';
+            if (evaluation) {
+                // This logic can be more complex, e.g., if there's an `in-progress` state
+                status = 'Feedback Available';
+            }
+            return {
+                id: c.conceptId,
+                name: c.conceptName,
+                status: status,
+                questions: [] // Not needed for this view
+            };
+        });
+
+        // Group concepts by chapter
+        const chaptersMap: { [key: string]: Chapter } = {};
+        allConcepts.forEach(concept => {
+            if (!chaptersMap[concept.chapter]) {
+                chaptersMap[concept.chapter] = {
+                    id: concept.chapter.toLowerCase().replace(/\s/g, '-'),
+                    title: concept.chapter,
+                    icon: '🧪', // Assign a default or dynamic icon
+                    concepts: [],
+                };
+            }
+            const conceptWithStatus = conceptsWithStatus.find(cws => cws.id === concept.conceptId);
+            if (conceptWithStatus) {
+                chaptersMap[concept.chapter].concepts.push(conceptWithStatus);
+            }
+        });
+        
+        // A more realistic grouping of icons based on subject matter.
+        const chapterIcons: { [key: string]: string } = {
+            'Plants': '🌿',
+            'Water': '💧',
+            'Animals & Human Body': '🐾',
+            'Materials & Changes': '🧪',
+            'Energy, Light & Sound': '⚡',
+            'Earth, Water & Environment': '🌍'
+        };
+
+        Object.values(chaptersMap).forEach(chapter => {
+            const firstConcept = getConcepts().find(c => c.chapter === chapter.title);
+            if(firstConcept?.subject === 'Science') {
+                chapter.icon = chapterIcons[chapter.title] || '🧪';
+            }
+        });
+
+
+        setChapters(Object.values(chaptersMap));
+        setLoading(false);
+    } catch (e) {
+        setError("Failed to load concepts.");
+        setLoading(false);
+    }
   }, []);
 
   const handleRetry = () => {
     setLoading(true);
     setError(null);
-    // Simulate refetch
-     setTimeout(() => {
-      setChapters(mockChapters);
-      setLoading(false);
-    }, 1000);
+    // You might want to re-run the useEffect logic here
   };
 
   const filteredChapters = chapters.map(chapter => {
     const filteredConcepts = chapter.concepts.filter(concept => {
-      const matchesSearch = concept.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = concept.name.toLowerCase().includes(searchQuery.toLowerCase()) || chapter.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter = !showOnlyNeedingAttention || (concept.status === 'Not Started' || concept.status === 'In Progress');
       return matchesSearch && matchesFilter;
     });
@@ -136,7 +139,7 @@ export default function StudentDashboard() {
   return (
     <div className="container mx-auto py-8">
        <Button asChild variant="outline" className="mb-4">
-        <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Home</Link>
+        <Link href="/login"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Login</Link>
       </Button>
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-primary">Select what you are working on today</h1>
@@ -179,7 +182,7 @@ export default function StudentDashboard() {
                 <p className="text-muted-foreground">No concepts have been assigned yet.</p>
             </div>
         ) : (
-            <Accordion type="single" collapsible className="w-full space-y-2">
+            <Accordion type="single" collapsible className="w-full space-y-2" defaultValue={filteredChapters[0]?.id}>
             {filteredChapters.map(chapter => (
                 <AccordionItem value={chapter.id} key={chapter.id} className="border-b-0 rounded-lg bg-card shadow-sm">
                 <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">

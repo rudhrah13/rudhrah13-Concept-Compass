@@ -11,60 +11,93 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { ConceptOverview, StudentAttemptSummary, UnderstandingLevel } from '@/types';
+import type { ConceptOverview, UnderstandingLevel, DemoConcept, DemoEvaluation, DemoStudent } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { getConcepts, getEvaluations, getStudents, initializeDemoData } from '@/lib/demo-data';
 
-const dummyConceptData: ConceptOverview = {
-    id: 'photosynthesis',
-    name: 'Photosynthesis',
-    distribution: { strong: 5, partial: 12, weak: 3 },
-    keyGaps: [
-        'Missed steps of food preparation process.',
-        'Confused the roles of sunlight and heat.',
-        'Difficulty explaining the concept in their own words.',
-    ],
-    suggestedActions: [
-        'Re-explain the process using a visual diagram on the board.',
-        'Ask students to explain the concept aloud to a partner.',
-        'Use the real-life example of a houseplant needing sunlight.',
-    ],
-    studentAttempts: [
-        { studentId: '1', studentName: 'Anonymized Student 1', rollNumber: 'S101', understanding: 'Partial', keyIssue: 'Incomplete food steps' },
-        { studentId: '2', studentName: 'Anonymized Student 2', rollNumber: 'S102', understanding: 'Strong', keyIssue: 'None' },
-        { studentId: '3', studentName: 'Anonymized Student 3', rollNumber: 'S103', understanding: 'Weak', keyIssue: 'Role of CO2 missing' },
-        { studentId: '4', studentName: 'Anonymized Student 4', rollNumber: 'S104', understanding: 'Partial', keyIssue: 'Confused sunlight/heat' },
-    ]
-};
 
 const getUnderstandingBadge = (level: UnderstandingLevel) => {
     switch (level) {
         case 'Strong':
-            return <Badge className="bg-success/20 text-success-foreground hover:bg-success/30">Strong</Badge>;
+            return <Badge className="bg-green-500/20 text-green-700 hover:bg-green-500/30">Strong</Badge>;
         case 'Weak':
-            return <Badge variant="destructive" className="bg-destructive/20 text-destructive-foreground hover:bg-destructive/30">Weak</Badge>;
+            return <Badge variant="destructive" className="bg-red-500/20 text-red-700 hover:bg-red-500/30">Weak</Badge>;
         case 'Partial':
         default:
-            return <Badge className="bg-warning/20 text-warning-foreground hover:bg-warning/30">Partial</Badge>;
+            return <Badge className="bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30">Partial</Badge>;
     }
 }
 
 export default function ConceptOverviewPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params.id as string; // conceptId
   useProtectedRoute('teacher');
-  const [concept, setConcept] = useState<ConceptOverview | null>(null);
+  const [conceptData, setConceptData] = useState<DemoConcept | null>(null);
+  const [conceptOverview, setConceptOverview] = useState<ConceptOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = () => {
     setLoading(true);
     setError(null);
+    initializeDemoData();
+
     setTimeout(() => {
-      // To test error: setError("Failed to load concept overview.");
-      // To test empty: setConcept({ ...dummyConceptData, studentAttempts: [] });
-      setConcept(dummyConceptData);
-      setLoading(false);
-    }, 1000);
+      try {
+        const foundConcept: DemoConcept | undefined = getConcepts().find(c => c.conceptId === id);
+        if (!foundConcept) {
+            setError("Concept not found.");
+            setLoading(false);
+            return;
+        }
+        setConceptData(foundConcept);
+
+        const allEvaluations: DemoEvaluation[] = getEvaluations();
+        const evaluationsForConcept = allEvaluations.filter(e => e.conceptId === id);
+        const allStudents: DemoStudent[] = getStudents();
+
+        const gapCounts: { [key: string]: number } = {};
+        evaluationsForConcept.forEach(e => {
+            if (e.evaluation.gap && e.evaluation.gap !== 'None') {
+                gapCounts[e.evaluation.gap] = (gapCounts[e.evaluation.gap] || 0) + 1;
+            }
+        });
+
+        const sortedGaps = Object.keys(gapCounts).sort((a, b) => gapCounts[b] - gapCounts[a]);
+        
+        const overview: ConceptOverview = {
+            id: foundConcept.conceptId,
+            name: foundConcept.conceptName,
+            distribution: {
+                strong: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Strong').length,
+                partial: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Partial').length,
+                weak: evaluationsForConcept.filter(e => e.evaluation.understanding === 'Weak').length,
+            },
+            keyGaps: sortedGaps.slice(0, 3),
+            suggestedActions: [ // This can be made dynamic later
+                'Re-explain the process using a visual diagram on the board.',
+                'Ask students to explain the concept aloud to a partner.',
+                'Use the real-life example of a houseplant needing sunlight.',
+            ],
+            studentAttempts: evaluationsForConcept.map(e => {
+                const student = allStudents.find(s => s.studentId === e.studentId);
+                return {
+                    studentId: e.studentId,
+                    studentName: student?.name || 'Unknown Student',
+                    rollNumber: student?.studentId || 'N/A',
+                    understanding: e.evaluation.understanding,
+                    keyIssue: e.evaluation.gap,
+                };
+            }),
+        };
+        
+        setConceptOverview(overview);
+      } catch(e) {
+          setError("Failed to load concept overview.");
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
   };
 
   useEffect(() => {
@@ -84,7 +117,7 @@ export default function ConceptOverviewPage() {
     );
   }
   
-  if (!concept) {
+  if (!conceptOverview || !conceptData) {
     return (
       <div className="container mx-auto py-10 text-center">
         <p>Concept data not found.</p>
@@ -93,7 +126,7 @@ export default function ConceptOverviewPage() {
     );
   }
 
-  const totalStudents = concept.distribution.strong + concept.distribution.partial + concept.distribution.weak;
+  const totalStudents = conceptOverview.distribution.strong + conceptOverview.distribution.partial + conceptOverview.distribution.weak;
 
   return (
     <div className="container py-10">
@@ -109,14 +142,18 @@ export default function ConceptOverviewPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{concept.name}</BreadcrumbPage>
+                <BreadcrumbLink asChild><Link href="/teacher/dashboard">{conceptData.chapter}</Link></BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{conceptOverview.name}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
-        <h1 className="text-4xl font-bold mb-2">Concept Overview: {concept.name}</h1>
+        <h1 className="text-4xl font-bold mb-2">Concept: {conceptOverview.name}</h1>
         <div className="flex items-center gap-4 text-muted-foreground">
-          <span>Class: <strong>8A</strong></span>
-          <span>Subject: <strong>Science</strong></span>
+          <span>Class: <strong>5A</strong></span>
+          <span>Subject: <strong>{conceptData.subject}</strong></span>
         </div>
       </header>
 
@@ -124,12 +161,13 @@ export default function ConceptOverviewPage() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Understanding Distribution</CardTitle>
+                <CardDescription>Counts of student understanding levels for this concept.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <DistributionPill label="Strong" count={concept.distribution.strong} total={totalStudents} color="bg-green-500" />
-                    <DistributionPill label="Partial" count={concept.distribution.partial} total={totalStudents} color="bg-yellow-500" />
-                    <DistributionPill label="Weak" count={concept.distribution.weak} total={totalStudents} color="bg-red-500" />
+                    <DistributionPill label="Strong" count={conceptOverview.distribution.strong} total={totalStudents} color="bg-green-500" />
+                    <DistributionPill label="Partial" count={conceptOverview.distribution.partial} total={totalStudents} color="bg-yellow-500" />
+                    <DistributionPill label="Weak" count={conceptOverview.distribution.weak} total={totalStudents} color="bg-red-500" />
                 </div>
             </CardContent>
         </Card>
@@ -137,12 +175,16 @@ export default function ConceptOverviewPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Key Gaps Identified</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" />Most common confusions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                        {concept.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
-                    </ul>
+                    {conceptOverview.keyGaps.length > 0 ? (
+                        <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                            {conceptOverview.keyGaps.map((gap, i) => <li key={i}>{gap}</li>)}
+                        </ul>
+                    ) : (
+                        <p className="text-muted-foreground">No common gaps identified yet.</p>
+                    )}
                 </CardContent>
             </Card>
             <Card>
@@ -151,7 +193,7 @@ export default function ConceptOverviewPage() {
                 </CardHeader>
                 <CardContent>
                     <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                        {concept.suggestedActions.map((action, i) => <li key={i}>{action}</li>)}
+                        {conceptOverview.suggestedActions.map((action, i) => <li key={i}>{action}</li>)}
                     </ul>
                 </CardContent>
             </Card>
@@ -163,7 +205,7 @@ export default function ConceptOverviewPage() {
                 <CardDescription>Review individual student answers and the feedback they received for this specific concept.</CardDescription>
             </CardHeader>
             <CardContent>
-                {concept.studentAttempts.length > 0 ? (
+                {conceptOverview.studentAttempts.length > 0 ? (
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -174,25 +216,25 @@ export default function ConceptOverviewPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {concept.studentAttempts.map((student) => (
+                            {conceptOverview.studentAttempts.map((student) => (
                                 <TableRow key={student.studentId} className="group">
                                     <TableCell className="font-medium p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {student.studentName} ({student.rollNumber})
                                         </Link>
                                     </TableCell>
                                     <TableCell className="p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {getUnderstandingBadge(student.understanding)}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center p-4 h-full">
                                             {student.keyIssue}
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-right p-0">
-                                        <Link href={`/teacher/student/${student.studentId}?concept=${concept.id}`} className="flex items-center justify-end p-4 h-full">
+                                        <Link href={`/teacher/student/${student.studentId}?fromConcept=${conceptData.conceptId}`} className="flex items-center justify-end p-4 h-full">
                                             <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
                                         </Link>
                                     </TableCell>

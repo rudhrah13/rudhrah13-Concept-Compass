@@ -6,6 +6,7 @@ export type Role = 'student' | 'teacher';
 // Student Dashboard
 export type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 export type UnderstandingLevel = 'Strong' | 'Partial' | 'Weak';
+export type StudentStatus = 'Doing well' | 'Needs attention' | 'Struggling' | 'Not yet evaluated';
 
 export interface Concept {
   id: string;
@@ -25,6 +26,7 @@ export interface Chapter {
 export interface ConceptPerformance {
   id: string;
   name: string;
+  chapter: string;
   understanding: {
     strong: number;
     partial: number;
@@ -34,9 +36,10 @@ export interface ConceptPerformance {
 
 // Teacher Dashboard - Student Roster
 export interface Student {
-    id: string;
+    id:string;
     name: string;
     rollNumber: string;
+    status: StudentStatus;
 }
 
 // Data contract for Concept Overview page
@@ -98,6 +101,46 @@ export interface StudentProfile {
     status: UnderstandingLevel;
     date: string;
   }[];
+}
+
+// LocalStorage Demo Schemas
+export interface DemoStudent {
+  studentId: string;
+  name: string;
+  class: string;
+}
+
+export interface DemoConcept {
+  conceptId: string;
+  conceptName: string;
+  subject: string;
+  chapter: string;
+  grade: number;
+}
+
+export interface DemoEvaluation {
+  sessionId: string;
+  studentId: string;
+  conceptId: string;
+  date: string;
+  conversation: {
+    questionsAsked: {
+      questionType: string;
+      questionText: string;
+    }[];
+    studentResponses: string[];
+  },
+  evaluation: {
+    understanding: UnderstandingLevel;
+    strength: string;
+    gap: string;
+    language: {
+      clarity: string;
+      confidence: string;
+    },
+    nextSteps?: string[];
+  },
+  correctExplanation: string;
 }
 
 
