@@ -6,6 +6,7 @@ export type Role = 'student' | 'teacher';
 // Student Dashboard
 export type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 export type UnderstandingLevel = 'Strong' | 'Partial' | 'Weak';
+export type StudentStatus = 'Doing well' | 'Needs attention' | 'Struggling';
 
 export interface Concept {
   id: string;
@@ -38,6 +39,7 @@ export interface Student {
     id:string;
     name: string;
     rollNumber: string;
+    status: StudentStatus;
 }
 
 // Data contract for Concept Overview page

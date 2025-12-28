@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2, Circle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { ConceptPerformance, Student as StudentType, DemoStudent, DemoConcept, DemoEvaluation } from '@/types';
+import type { ConceptPerformance, Student as StudentType, DemoStudent, DemoConcept, DemoEvaluation, StudentStatus } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
 import { getStudents, getConcepts, getEvaluations, initializeDemoData } from '@/lib/demo-data';
 
@@ -122,10 +122,10 @@ function ConceptList() {
 
     const getUnderstandingText = (concept: ConceptPerformance) => {
         const { strong, partial, weak } = concept.understanding;
-        if (strong >= 65) return `${Math.round(strong)}% Strong`;
-        if (weak > 30) return `${Math.round(weak)}% Weak`;
-        if (strong + partial + weak === 0) return 'Not Attempted';
-        return `${Math.round(partial + weak)}% Needs Work`;
+        if (strong + partial + weak === 0) return 'This concept hasn’t been checked yet';
+        if (weak > 30) return 'Many students are struggling here';
+        if (strong >= 65) return 'No immediate action needed';
+        return 'Some students need review';
     }
 
     const getUnderstandingBadgeForConcept = (concept: ConceptPerformance) => {
@@ -155,9 +155,9 @@ function ConceptList() {
             <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Concept</TableHead>
-                    <TableHead>Class Understanding</TableHead>
-                    <TableHead className="text-right sr-only">Actions</TableHead>
+                    <TableHead className="w-[50%]">Concept</TableHead>
+                    <TableHead className="w-[50%]">Class Understanding</TableHead>
+                    <TableHead className="text-right sr-only w-[50px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -179,11 +179,9 @@ function ConceptList() {
                                     </Link>
                                 </TableCell>
                                 <TableCell className="p-0">
-                                    <Link href={`/teacher/concept/${concept.id}`} className="flex items-center p-4 h-full">
-                                        <div className="flex items-center gap-2">
-                                            {getUnderstandingBadgeForConcept(concept)}
-                                            <span className="text-muted-foreground text-sm">{getUnderstandingText(concept)}</span>
-                                        </div>
+                                    <Link href={`/teacher/concept/${concept.id}`} className="flex flex-col items-start gap-1 p-4 h-full">
+                                        {getUnderstandingBadgeForConcept(concept)}
+                                        <span className="text-muted-foreground text-xs">{getUnderstandingText(concept)}</span>
                                     </Link>
                                 </TableCell>
                                 <TableCell className="text-right p-0">
@@ -204,7 +202,7 @@ function ConceptList() {
         <>
             <CardHeader>
               <CardTitle>Concept Performance</CardTitle>
-              <CardDescription>Click on a concept to drill down into student-level understanding.</CardDescription>
+              <CardDescription>Use this view to find concepts where many students are struggling.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {renderContent()}
@@ -224,11 +222,28 @@ function StudentList() {
         setTimeout(() => {
             try {
                 const studentData: DemoStudent[] = getStudents();
-                const transformedStudents = studentData.map(s => ({
-                    id: s.studentId,
-                    name: s.name,
-                    rollNumber: s.studentId,
-                }));
+                const allEvaluations: DemoEvaluation[] = getEvaluations();
+
+                const transformedStudents = studentData.map(s => {
+                    const studentEvals = allEvaluations.filter(e => e.studentId === s.studentId);
+                    let status: StudentStatus = 'Doing well';
+                    if (studentEvals.length > 0) {
+                        const weakCount = studentEvals.filter(e => e.evaluation.understanding === 'Weak').length;
+                        const partialCount = studentEvals.filter(e => e.evaluation.understanding === 'Partial').length;
+                        if (weakCount > 1 || (weakCount === 1 && partialCount > 0)) {
+                            status = 'Struggling';
+                        } else if (weakCount === 1 || partialCount > 1) {
+                            status = 'Needs attention';
+                        }
+                    }
+
+                    return {
+                        id: s.studentId,
+                        name: s.name,
+                        rollNumber: s.studentId,
+                        status: status,
+                    }
+                });
                 setStudents(transformedStudents);
             } catch (e) {
                 setError("Failed to load students.");
@@ -239,6 +254,19 @@ function StudentList() {
     };
 
     useEffect(fetchData, []);
+
+     const getStatusIndicator = (status: StudentStatus) => {
+        switch (status) {
+            case 'Struggling':
+                return <Circle className="h-2.5 w-2.5 fill-red-500 text-red-500" />;
+            case 'Needs attention':
+                return <Circle className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />;
+            case 'Doing well':
+            default:
+                return <Circle className="h-2.5 w-2.5 fill-green-500 text-green-500" />;
+        }
+    };
+
 
      const renderContent = () => {
         if (loading) {
@@ -259,16 +287,17 @@ function StudentList() {
              <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Roll Number</TableHead>
-                    <TableHead className="text-right sr-only">Actions</TableHead>
+                    <TableHead className="w-[50%]">Student Name</TableHead>
+                    <TableHead className="w-[50%]">Roll Number</TableHead>
+                    <TableHead className="text-right sr-only w-[50px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {students.map((student) => (
                     <TableRow key={student.id} className="group">
                       <TableCell className="font-medium p-0">
-                         <Link href={`/teacher/student/${student.id}`} className="flex items-center p-4 h-full">
+                         <Link href={`/teacher/student/${student.id}`} className="flex items-center gap-2 p-4 h-full">
+                            {getStatusIndicator(student.status)}
                             {student.name}
                         </Link>
                       </TableCell>
@@ -293,7 +322,7 @@ function StudentList() {
         <>
             <CardHeader>
               <CardTitle>Student Roster</CardTitle>
-              <CardDescription>Click on a student to view their overall performance profile.</CardDescription>
+              <CardDescription>Use this view to understand individual student performance.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {renderContent()}
