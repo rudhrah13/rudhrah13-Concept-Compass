@@ -44,8 +44,9 @@ const startConversationFlow = ai.defineFlow(
     const llmResponse = await ai.generate({
         prompt: prompt,
         model: 'googleai/gemini-2.5-flash',
-        input: input
-    });
+        // The 'input' object is passed to the flow, and the prompt
+        // template substitutions are handled by Genkit automatically.
+    }, input);
 
     const questionText = llmResponse.text;
 
