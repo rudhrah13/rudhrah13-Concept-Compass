@@ -11,7 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import wav from 'wav';
-import { startConversationFlow, StartConversationInputSchema, StartConversationOutputSchema } from '@/types';
+import { StartConversationInputSchema, StartConversationOutputSchema } from '@/types';
 
 
 export async function startConversation(input: z.infer<typeof StartConversationInputSchema>): Promise<z.infer<typeof StartConversationOutputSchema>> {
@@ -33,7 +33,7 @@ Concept: {{{conceptName}}}
 Your first spoken question:`;
 
 
-const startConversationGenkitFlow = ai.defineFlow(
+const startConversationFlow = ai.defineFlow(
   {
     name: 'startConversationFlow',
     inputSchema: StartConversationInputSchema,

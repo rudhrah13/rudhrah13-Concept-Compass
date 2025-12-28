@@ -11,7 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import wav from 'wav';
-import { continueConversationFlow, ContinueConversationInputSchema, ContinueConversationOutputSchema } from '@/types';
+import { ContinueConversationInputSchema, ContinueConversationOutputSchema } from '@/types';
 
 
 export async function continueConversation(input: z.infer<typeof ContinueConversationInputSchema>): Promise<z.infer<typeof ContinueConversationOutputSchema>> {
@@ -39,7 +39,7 @@ Student's First Answer: {{{firstAnswer}}}
 
 Your spoken response (acknowledgment + follow-up question):`;
 
-const continueConversationGenkitFlow = ai.defineFlow(
+const continueConversationFlow = ai.defineFlow(
   {
     name: 'continueConversationFlow',
     inputSchema: ContinueConversationInputSchema,
