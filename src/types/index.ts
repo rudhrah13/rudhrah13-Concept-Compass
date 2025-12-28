@@ -6,7 +6,7 @@ export type Role = 'student' | 'teacher';
 // Student Dashboard
 export type ConceptStatus = 'Not Started' | 'In Progress' | 'Feedback Available';
 export type UnderstandingLevel = 'Strong' | 'Partial' | 'Weak';
-export type StudentStatus = 'Doing well' | 'Needs attention' | 'Struggling';
+export type StudentStatus = 'Doing well' | 'Needs attention' | 'Struggling' | 'Not yet evaluated';
 
 export interface Concept {
   id: string;

@@ -226,14 +226,19 @@ function StudentList() {
 
                 const transformedStudents = studentData.map(s => {
                     const studentEvals = allEvaluations.filter(e => e.studentId === s.studentId);
-                    let status: StudentStatus = 'Doing well';
-                    if (studentEvals.length > 0) {
+                    let status: StudentStatus;
+                    
+                    if (studentEvals.length === 0) {
+                        status = 'Not yet evaluated';
+                    } else {
                         const weakCount = studentEvals.filter(e => e.evaluation.understanding === 'Weak').length;
                         const partialCount = studentEvals.filter(e => e.evaluation.understanding === 'Partial').length;
                         if (weakCount > 1 || (weakCount === 1 && partialCount > 0)) {
                             status = 'Struggling';
                         } else if (weakCount === 1 || partialCount > 1) {
                             status = 'Needs attention';
+                        } else {
+                            status = 'Doing well';
                         }
                     }
 
@@ -262,8 +267,10 @@ function StudentList() {
             case 'Needs attention':
                 return <><Circle className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500 mr-2" />Needs attention</>;
             case 'Doing well':
-            default:
                 return <><Circle className="h-2.5 w-2.5 fill-green-500 text-green-500 mr-2" />Doing well</>;
+            case 'Not yet evaluated':
+            default:
+                return <><Circle className="h-2.5 w-2.5 fill-slate-400 text-slate-400 mr-2" />Not yet evaluated</>;
         }
     };
 

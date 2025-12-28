@@ -69,7 +69,9 @@ export default function TeacherStudentOverviewPage() {
 }
 
 function StudentProfileView({ studentId, fromConceptId }: { studentId: string, fromConceptId: string | null }) {
-    const [student, setStudent] = useState<StudentProfile | null>(null);
+    const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+    const [basicStudentInfo, setBasicStudentInfo] = useState<{ id: string; name: string; rollNumber: string } | null>(null);
+    const [hasEvaluations, setHasEvaluations] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -91,8 +93,16 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                 setLoading(false);
                 return;
             }
+            setBasicStudentInfo({ id: studentData.studentId, name: studentData.name, rollNumber: studentData.studentId });
 
             const studentEvaluations = getEvaluations().filter(e => e.studentId === studentId);
+            if (studentEvaluations.length === 0) {
+                setHasEvaluations(false);
+                setLoading(false);
+                return;
+            }
+            setHasEvaluations(true);
+
             const allConcepts = getConcepts();
 
             const strongConcepts = studentEvaluations.filter(e => e.evaluation.understanding === 'Strong').length;
@@ -140,7 +150,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
                         }
                     }).slice(0, 5), // Limit to recent 5
             };
-            setStudent(profile);
+            setStudentProfile(profile);
            } catch(e) {
                 setError("Failed to load student profile.");
            } finally {
@@ -164,7 +174,7 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
         );
     }
   
-    if (!student) {
+    if (!basicStudentInfo) {
         return (
             <div className="container mx-auto py-10 text-center">
                 <p>Student not found.</p>
@@ -184,118 +194,128 @@ function StudentProfileView({ studentId, fromConceptId }: { studentId: string, f
             <header className="mb-6 rounded-lg border bg-card text-card-foreground shadow-sm p-4">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold">{student.name} ({student.rollNumber})</h1>
+                        <h1 className="text-2xl font-bold">{basicStudentInfo.name} ({basicStudentInfo.rollNumber})</h1>
                         <p className="text-muted-foreground">Overall Student Profile</p>
                     </div>
                     <Badge variant="outline">Teacher View</Badge>
                 </div>
             </header>
 
-            <div className="space-y-6">
-
-                {fromConcept && (
-                    <Card className="bg-blue-50 border-blue-200">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-blue-800"><Sparkles className="w-5 h-5" />Concept in Context</CardTitle>
-                            <CardDescription>You are viewing this student's profile in the context of the '{fromConcept.conceptName}' concept.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {fromConceptEvaluation ? (
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-background border">
-                                    <div className='space-y-1'>
-                                        <p className="font-semibold">{fromConcept.conceptName}</p>
-                                        <div className='flex items-center gap-2'>
-                                            <span className="text-sm text-muted-foreground">Status:</span>
-                                            {getUnderstandingBadge(fromConceptEvaluation.evaluation.understanding)}
-                                        </div>
-                                    </div>
-                                    <Button onClick={() => router.push(`/teacher/student/${studentId}?fromConcept=${fromConceptId}&showFeedback=true`)}>
-                                        View Detailed Feedback
-                                    </Button>
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground text-sm">This student has not yet attempted the '{fromConcept.conceptName}' concept.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
-
+            {!hasEvaluations ? (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />Overall Snapshot</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                            <p className="text-3xl font-bold text-green-600">{student.snapshot.strongConcepts}</p>
-                            <p className="text-sm font-medium">Strong Concepts</p>
-                        </div>
-                        <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                            <p className="text-3xl font-bold text-yellow-600">{student.snapshot.needsWork}</p>
-                            <p className="text-sm font-medium">Needs Work</p>
-                        </div>
-                        <div className="p-4 bg-red-500/10 rounded-lg col-span-1 md:col-span-3 text-left border border-red-500/20">
-                            <p className="font-semibold text-red-600">Repeated Issue</p>
-                            <p className="text-sm text-muted-foreground">{student.snapshot.repeatedIssue}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Other Concept Attempts</CardTitle>
+                        <CardTitle>No Attempts Yet</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         <div className="flex flex-col gap-3">
-                            {student.recentConcepts.length > 0 ? student.recentConcepts.map(concept => (
-                                <Link key={concept.id} href={`/teacher/student/${studentId}?fromConcept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
-                                    <div>
-                                        <p className="font-medium">{concept.name}</p>
-                                        <p className="text-sm text-muted-foreground">{concept.date}</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        {getUnderstandingBadge(concept.status)}
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                                    </div>
-
-                                </Link>
-                            )) : <p className="text-muted-foreground text-center py-4">No other concepts attempted yet.</p>}
-                        </div>
+                        <p className="text-muted-foreground">This student has not attempted any concepts yet. Ask them to attempt a concept to see insights here.</p>
                     </CardContent>
                 </Card>
+            ) : studentProfile && (
+                <div className="space-y-6">
+                    {fromConcept && (
+                        <Card className="bg-blue-50 border-blue-200">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-blue-800"><Sparkles className="w-5 h-5" />Concept in Context</CardTitle>
+                                <CardDescription>You are viewing this student's profile in the context of the '{fromConcept.conceptName}' concept.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {fromConceptEvaluation ? (
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-background border">
+                                        <div className='space-y-1'>
+                                            <p className="font-semibold">{fromConcept.conceptName}</p>
+                                            <div className='flex items-center gap-2'>
+                                                <span className="text-sm text-muted-foreground">Status:</span>
+                                                {getUnderstandingBadge(fromConceptEvaluation.evaluation.understanding)}
+                                            </div>
+                                        </div>
+                                        <Button onClick={() => router.push(`/teacher/student/${studentId}?fromConcept=${fromConceptId}&showFeedback=true`)}>
+                                            View Detailed Feedback
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">This student has not yet attempted the '{fromConcept.conceptName}' concept.</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
 
-                 <Accordion type="single" collapsible className="w-full space-y-2">
-                    <AccordionItem value="detailed-analysis" className="border-b-0 rounded-lg bg-card shadow-sm">
-                        <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
-                            <div className="flex items-center gap-4">
-                            Detailed Analysis
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><User className="w-5 h-5" />Overall Snapshot</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                                <p className="text-3xl font-bold text-green-600">{studentProfile.snapshot.strongConcepts}</p>
+                                <p className="text-sm font-medium">Strong Concepts</p>
                             </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-6 pb-4 space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Learning Patterns</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                                    {student.patterns.map((item, i) => <li key={i}>{item}</li>)}
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><Target className="w-5 h-5" />Suggested Focus Actions</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                                        {student.focusActions.map((item, i) => <li key={i}>{item}</li>)}
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </div>
+                            <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                                <p className="text-3xl font-bold text-yellow-600">{studentProfile.snapshot.needsWork}</p>
+                                <p className="text-sm font-medium">Needs Work</p>
+                            </div>
+                            <div className="p-4 bg-red-500/10 rounded-lg col-span-1 md:col-span-3 text-left border border-red-500/20">
+                                <p className="font-semibold text-red-600">Repeated Issue</p>
+                                <p className="text-sm text-muted-foreground">{studentProfile.snapshot.repeatedIssue}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Other Concept Attempts</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col gap-3">
+                                {studentProfile.recentConcepts.length > 0 ? studentProfile.recentConcepts.map(concept => (
+                                    <Link key={concept.id} href={`/teacher/student/${studentId}?fromConcept=${concept.id}`} className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 transition-colors group">
+                                        <div>
+                                            <p className="font-medium">{concept.name}</p>
+                                            <p className="text-sm text-muted-foreground">{concept.date}</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            {getUnderstandingBadge(concept.status)}
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+                                        </div>
+
+                                    </Link>
+                                )) : <p className="text-muted-foreground text-center py-4">No other concepts attempted yet.</p>}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Accordion type="single" collapsible className="w-full space-y-2">
+                        <AccordionItem value="detailed-analysis" className="border-b-0 rounded-lg bg-card shadow-sm">
+                            <AccordionTrigger className="px-6 py-4 text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-4">
+                                Detailed Analysis
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-6 pb-4 space-y-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" />Repeated Learning Patterns</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                                        {studentProfile.patterns.map((item, i) => <li key={i}>{item}</li>)}
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2"><Target className="w-5 h-5" />Suggested Focus Actions</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                                            {studentProfile.focusActions.map((item, i) => <li key={i}>{item}</li>)}
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
+            )}
         </div>
     );
 }
@@ -529,4 +549,5 @@ function StudentConceptFeedbackView({ studentId, conceptId }: { studentId: strin
     </div>
   );
 }
+
 
