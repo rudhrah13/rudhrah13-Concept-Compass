@@ -21,7 +21,7 @@ const mockConcept: Concept = {
   status: 'Not Started',
 };
 
-type SessionState = 'idle' | 'recording' | 'paused' | 'processing' | 'submitting' | 'denied' | 'error';
+type SessionState = 'idle' | 'recording' | 'paused' | 'processing' | 'waitingForAI' | 'submitting' | 'denied' | 'error';
 
 export default function ConceptPage() {
   const params = useParams();
@@ -41,7 +41,7 @@ export default function ConceptPage() {
   // Store transcripts for final submission
   const [fullTranscript, setFullTranscript] = useState('');
   const [questions, setQuestions] = useState<string[]>([]);
-  const [questionCount, setQuestionCount] = useState(0);
+  const [answers, setAnswers] = useState<string[]>([]);
 
   useEffect(() => {
     setConceptData(mockConcept);
@@ -86,11 +86,10 @@ export default function ConceptPage() {
     try {
       const { audioDataUri, questionText } = await startConversation({ conceptName: conceptData.name });
       setQuestions([questionText]);
-      setQuestionCount(1);
       playAudio(audioDataUri, startRecording);
     } catch (e) {
       setError('Could not start the conversation. Please try again.');
-      setSessionState('idle');
+      setSessionState('error');
     }
   };
 
@@ -150,62 +149,56 @@ export default function ConceptPage() {
     if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current);
     }
-    if (!isCleanup && sessionState !== 'submitting' && sessionState !== 'processing') {
+    if (isCleanup) {
         setSessionState('idle');
     }
   };
 
   const handleTranscript = (transcript: string) => {
-    
-    if (questionCount < 2) {
-        setFullTranscript(prev => prev ? `${prev}\n\n${transcript}`: transcript);
+    stopRecording();
+    if (answers.length < 1) {
+        setAnswers([transcript]);
         handleContinueConversation(transcript);
     } else {
-        const finalTranscript = fullTranscript ? `${fullTranscript}\n\n${transcript}`: transcript;
-        setFullTranscript(finalTranscript);
-        endConversation(finalTranscript);
+        setAnswers(prev => [...prev, transcript]);
+        endConversation([...answers, transcript]);
     }
   };
   
-  const handleContinueConversation = async (answer: string) => {
+  const handleContinueConversation = async (firstAnswer: string) => {
     if (!conceptData) return;
-    setSessionState('processing');
-    stopRecording(); // Stop current recording before fetching next question
+    setSessionState('waitingForAI'); 
     try {
         const { audioDataUri, aiResponseText } = await continueConversation({
             conceptName: conceptData.name,
-            firstAnswer: answer,
+            firstAnswer: firstAnswer,
         });
         setQuestions(prev => [...prev, aiResponseText]);
-        setQuestionCount(2);
-        playAudio(audioDataUri, startRecording); // Start recording automatically after AI speaks
+        playAudio(audioDataUri, startRecording); 
     } catch(e) {
         setError('There was an error continuing the conversation.');
         setSessionState('error');
     }
   };
 
-  const endConversation = async (finalTranscript?: string) => {
+  const endConversation = async (finalAnswers?: string[]) => {
     stopRecording();
     setSessionState('submitting');
     
-    const transcriptToSubmit = finalTranscript || fullTranscript;
+    const answersToSubmit = finalAnswers || answers;
 
-    if (!conceptData || !transcriptToSubmit) {
+    if (!conceptData || answersToSubmit.length === 0) {
       setError('Could not submit because no answers were recorded.');
       setSessionState('error');
       return;
     }
     
     try {
-      // Split the transcript into answers based on our knowledge of the flow.
-      const answers = transcriptToSubmit.split('\n\n');
-
       await evaluateConcept({
         studentId: 'S123',
         conceptId: id,
-        questions: questions.slice(0, answers.length), // Match questions to answers
-        answers: answers
+        questions: questions.slice(0, answersToSubmit.length),
+        answers: answersToSubmit,
       });
       router.push(`/student/feedback/${id}`);
     } catch (e) {
@@ -216,12 +209,7 @@ export default function ConceptPage() {
 
   const togglePause = () => {
     if (sessionState === 'recording') {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
-        }
-        if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current);
-        }
+        stopRecording();
         setSessionState('paused');
     } else if (sessionState === 'paused') {
         startRecording();
@@ -246,7 +234,7 @@ export default function ConceptPage() {
     setSessionState('idle');
     setFullTranscript('');
     setQuestions([]);
-    setQuestionCount(0);
+    setAnswers([]);
   };
   
   const renderControls = () => {
@@ -273,10 +261,11 @@ export default function ConceptPage() {
                 </div>
             );
         case 'processing':
-            return (
+        case 'waitingForAI':
+             return (
                  <div className="flex flex-col items-center text-center">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground mt-2">Listening...</p>
+                    <p className="text-muted-foreground mt-2">{sessionState === 'processing' ? 'Starting...' : 'Listening...'}</p>
                 </div>
               );
         case 'submitting':
@@ -347,5 +336,3 @@ export default function ConceptPage() {
     </div>
   );
 }
-
-    
