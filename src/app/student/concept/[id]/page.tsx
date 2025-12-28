@@ -14,7 +14,7 @@ import { evaluateConcept } from '@/ai/flows/evaluate-concept';
 // Mock data, in a real app this would come from an API
 const mockConcept: Concept = {
   id: 'sci1',
-  title: 'Photosynthesis',
+  name: 'Photosynthesis',
   questions: [
     'Explain photosynthesis in your own words.',
     'What happens if sunlight is not available?',
@@ -126,6 +126,8 @@ export default function ConceptPage() {
     } else {
       setIsSubmitting(true);
       try {
+        // Here we use the original questions from the mock data,
+        // as the AI would be asking them in a real scenario.
         await evaluateConcept({
           studentId: 'S123', // Replace with actual student ID
           conceptId: id,
@@ -162,8 +164,6 @@ export default function ConceptPage() {
     return <div className="container mx-auto py-10 text-center"><p>Concept not found.</p></div>;
   }
   
-  const currentQuestion = conceptData.questions[currentQuestionIndex];
-
   return (
     <div className="container mx-auto py-10 max-w-4xl">
       <Button asChild variant="outline" className="mb-4">
@@ -171,8 +171,9 @@ export default function ConceptPage() {
       </Button>
 
       <header className="mb-8 text-center">
-        <p className="text-lg font-semibold text-primary">{conceptData.title}</p>
-        <h1 className="text-3xl font-bold">Answer by speaking. This is not a test.</h1>
+        <p className="text-lg font-semibold text-primary">{conceptData.name}</p>
+        <h1 className="text-3xl font-bold">Speak freely. There are no right or wrong answers.</h1>
+        <p className="text-muted-foreground">Just explain what you understand. The app is only listening.</p>
       </header>
 
       {isSubmitting ? (
@@ -184,7 +185,9 @@ export default function ConceptPage() {
       ) : (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl text-center font-normal">{currentQuestion}</CardTitle>
+            <CardTitle className="text-2xl text-center font-normal">
+              Question {currentQuestionIndex + 1} of {conceptData.questions.length}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center space-y-6 min-h-[250px]">
             {recordingState === 'denied' && (
