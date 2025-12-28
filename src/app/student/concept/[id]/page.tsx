@@ -5,14 +5,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Mic, Pause, Square, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { startTeachingCall, vapi } from '@/lib/vapi';
 import type { Concept, StudentAttempt } from '@/types';
 import { useProtectedRoute } from '@/hooks/use-protected-route';
+import { evaluateConcept } from '@/ai/flows/evaluate-concept';
+import { startConversation } from '@/ai/flows/start-conversation-flow';
+import { continueConversation } from '@/ai/flows/continue-conversation-flow';
 
-// Mock data, in a real app this would come from an API
 const mockConcept: Concept = {
   id: 'sci1',
   name: 'Photosynthesis',
@@ -38,18 +40,27 @@ export default function ConceptPage() {
   const id = params.id as string;
   useProtectedRoute('student');
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
   const [conceptData, setConceptData] = useState<Concept | null>(null);
   const [status, setStatus] = useState<"idle" | "connected" | "ended" | "error">("idle");
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      // To test error state: setError("Failed to load concept.");
-      setConceptData(mockConcept);
-      setLoading(false);
-    }, 500);
+    setConceptData(mockConcept);
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setSessionState('denied');
+        setError('Your browser does not support voice recognition. Please use Chrome or Firefox.');
+      }
+    }
+    // Cleanup on unmount
+    return () => {
+      stopRecording(true);
+      if (audioRef.current) {
+        audioRef.current.onended = null;
+        audioRef.current.onerror = null;
+      }
+    };
   }, [id]);
 
   useEffect(() => {
@@ -86,14 +97,18 @@ export default function ConceptPage() {
     router.push(`/student/feedback/${id}`);
   };
 
-  const handleRetry = () => {
-    setLoading(true);
+  const startSession = async () => {
+    if (!conceptData) return;
+    setSessionState('processing');
     setError(null);
-    // Simulate refetch
-    setTimeout(() => {
-      setConceptData(mockConcept);
-      setLoading(false);
-    }, 500);
+    try {
+      const { audioDataUri, questionText } = await startConversation({ conceptName: conceptData.name });
+      setQuestions([questionText]);
+      playAudio(audioDataUri, startRecording);
+    } catch (e) {
+      setError('Could not start the conversation. Please try again.');
+      setSessionState('error');
+    }
   };
 
   const startCall = async () => {
@@ -120,26 +135,87 @@ export default function ConceptPage() {
     return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept...</div>;
   }
 
-  if (error) {
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={handleRetry}>Try Again</Button>
-      </div>
-    );
+  const resetSilenceTimeout = () => {
+    if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+    }
+    silenceTimeoutRef.current = setTimeout(() => {
+        if (sessionState === 'recording' && recognitionRef.current) {
+            setError("We couldn’t hear you clearly. Please speak louder or try again.");
+            stopRecording();
+            setSessionState('error');
+        }
+    }, 10000); // 10 seconds of silence
+  };
+  
+  const handleTryAgain = () => {
+    setError(null);
+    setSessionState('idle');
+    setFullTranscript('');
+    setQuestions([]);
+    setAnswers([]);
+  };
+  
+  const renderControls = () => {
+    switch(sessionState) {
+        case 'idle':
+            return (
+                <Button onClick={startSession} size="lg" className="rounded-full w-32 h-32 flex flex-col items-center">
+                    <Mic className="h-12 w-12 mb-1" />
+                    Start Speaking
+                </Button>
+            );
+        case 'recording':
+        case 'paused':
+            return (
+                <div className="flex items-center justify-center space-x-4">
+                    <Button onClick={togglePause} variant="outline" size="lg" className="rounded-full w-28 h-28 flex flex-col items-center">
+                        {sessionState === 'recording' ? <Pause className="h-10 w-10 mb-1" /> : <Mic className="h-10 w-10 mb-1" />}
+                        {sessionState === 'recording' ? 'Pause' : 'Resume'}
+                    </Button>
+                    <Button onClick={() => endConversation()} variant="destructive" size="lg" className="rounded-full w-28 h-28 flex flex-col items-center">
+                        <Square className="h-10 w-10 mb-1" />
+                        End
+                    </Button>
+                </div>
+            );
+        case 'processing':
+        case 'waitingForAI':
+             return (
+                 <div className="flex flex-col items-center text-center">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                    <p className="text-muted-foreground mt-2">{sessionState === 'processing' ? 'Starting...' : 'Listening...'}</p>
+                </div>
+              );
+        case 'submitting':
+            return (
+                <div className="flex flex-col items-center justify-center text-center p-8 space-y-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-lg font-semibold">Understanding your explanation...</p>
+                    <p className="text-muted-foreground">Please wait a moment.</p>
+                </div>
+            );
+        case 'error':
+             return (
+                <Button onClick={handleTryAgain} variant="outline" size="lg">
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Try Again
+                </Button>
+            );
+        case 'denied':
+            return null; // The alert is already shown
+        default:
+            return null;
+    }
   }
 
   if (!conceptData) {
-    return (
-      <div className="container mx-auto py-10 text-center">
-        <p>Concept not found.</p>
-        <Button asChild variant="link"><Link href="/student/dashboard">Back to Concepts</Link></Button>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /> Loading concept...</div>;
   }
-
+  
   return (
     <div className="container mx-auto py-10 max-w-4xl">
+      <audio ref={audioRef} className="hidden" />
       <Button asChild variant="outline" className="mb-4">
         <Link href="/student/dashboard"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Concepts</Link>
       </Button>

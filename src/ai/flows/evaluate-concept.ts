@@ -8,29 +8,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { EvaluateConceptInputSchema, EvaluateConceptOutputSchema, type EvaluateConceptInput, type EvaluateConceptOutput } from '@/types';
 
-export const EvaluateConceptInputSchema = z.object({
-  studentId: z.string(),
-  conceptId: z.string(),
-  questions: z.array(z.string()),
-  answers: z.array(z.string()),
-});
-export type EvaluateConceptInput = z.infer<typeof EvaluateConceptInputSchema>;
-
-export const EvaluateConceptOutputSchema = z.object({
-    attemptId: z.string(),
-    understanding: z.enum(['Strong', 'Partial', 'Weak']),
-    strength: z.string(),
-    gap: z.string(),
-    language: z.object({
-        spelling: z.array(z.string()).optional(),
-        clarity: z.string().optional(),
-        pronunciation: z.array(z.string()).optional(),
-    }),
-    correctExplanation: z.string(),
-});
-export type EvaluateConceptOutput = z.infer<typeof EvaluateConceptOutputSchema>;
 
 export async function evaluateConcept(input: EvaluateConceptInput): Promise<EvaluateConceptOutput> {
     return evaluateConceptFlow(input);

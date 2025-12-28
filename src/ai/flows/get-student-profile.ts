@@ -8,32 +8,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { GetStudentProfileInputSchema, GetStudentProfileOutputSchema, type GetStudentProfileInput, type GetStudentProfileOutput } from '@/types';
 
-export const GetStudentProfileInputSchema = z.object({
-  studentId: z.string(),
-});
-export type GetStudentProfileInput = z.infer<typeof GetStudentProfileInputSchema>;
-
-export const GetStudentProfileOutputSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    rollNumber: z.string(),
-    snapshot: z.object({
-        strongConcepts: z.number(),
-        needsWork: z.number(),
-        repeatedIssue: z.string(),
-    }),
-    patterns: z.array(z.string()),
-    focusActions: z.array(z.string()),
-    recentConcepts: z.array(z.object({
-        id: z.string(),
-        name: z.string(),
-        status: z.enum(['Strong', 'Partial', 'Weak']),
-        date: z.string(),
-    })),
-});
-export type GetStudentProfileOutput = z.infer<typeof GetStudentProfileOutputSchema>;
 
 export async function getStudentProfile(input: GetStudentProfileInput): Promise<GetStudentProfileOutput> {
   return getStudentProfileFlow(input);
